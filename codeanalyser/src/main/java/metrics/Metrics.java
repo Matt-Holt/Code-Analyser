@@ -6,8 +6,10 @@ import java.util.HashMap;
 
 import javafx.scene.control.TextArea;
 
+
 public class Metrics {	
-	private String fileName;
+	private String fileName = "";
+	private String type = "";
 	private int totalLines;
 	private int commentLines;
 	//<field, times_used>
@@ -17,6 +19,7 @@ public class Metrics {
 	private String averageMethodComplexity;
 
 	private boolean inMethod;
+	private boolean inField;
 	private String methodKey;
 	private int startLine;
 	private int openCurlyBrackets = 0;
@@ -47,9 +50,22 @@ public class Metrics {
 		}
 		//Is a normal line
 		else {
+			
+			//Sets type of file
+			if (type.length() <= 0) {
+				if (line.toLowerCase().contains(" class"))
+					type = "Class";
+				else if (line.toLowerCase().contains(" enum"))
+					type = "Enum";
+				else if (line.toLowerCase().contains(" interface"))
+					type = "Interface";
+				else if (line.toLowerCase().contains(" module"))
+					type = "Module";
+			}
+			
 			//Method
-			if (t.contains("(") && t.contains(")") && !t.contains("=")) {
-				if (openCurlyBrackets - 1 == closedCurlyBrackets) {
+			if (t.contains("(") && t.contains(")")) {
+				if (openCurlyBrackets - 1 == closedCurlyBrackets && !t.contains("=")) {
 					String[] methodLine = t.split("\\(")[0].split(" ");
 					String method = methodLine[methodLine.length - 1];
 					methods.put(method, 1);
@@ -62,21 +78,26 @@ public class Metrics {
 			}
 			
 			//Variable
-			if (t.contains(";")) {
+			if (t.length() > 0) {
 				if (openCurlyBrackets - 1 == closedCurlyBrackets) {
-					String[] fieldLine = null;
 					String field = "";
-					
 					if (t.contains("=")) {
-						fieldLine = t.split("=")[0].split(" ");
-						field = fieldLine[fieldLine.length - 1];
+						//Gets each word before the semicolon 
+						String[] words = t.split("=")[0].split(" ");
+						
+						if (words.length > 1)
+							field = words[words.length - 1];
 					}
-					else {
-						fieldLine = t.split(";")[0].split(" ");
-						field = fieldLine[fieldLine.length - 1];
+					else if (t.contains(";") && t.length() > 1) {
+						String[] words = t.split(";")[0].split(" ");
+						
+						if (words.length > 1)
+							field = words[words.length - 1];
 					}
 					
-					fields.put(field, 1);
+					//Adds to list if field is set
+					if (field.length() > 0)
+						fields.put(field, totalLines);
 				}
 			}
 			
@@ -96,6 +117,11 @@ public class Metrics {
 					inMethod = false;
 				}
 			}
+
+			//If still in field and reaches end of it
+			 if (inField && t.contains(";")) {
+				 inField = false;
+			 }
 		}
 	}
 
@@ -104,6 +130,12 @@ public class Metrics {
 	 */
 	public String getFileName() {
 		return fileName;
+	}
+	/**
+	 * @return type
+	 */
+	public String getType() {
+		return type;
 	}
 	/**
 	 * @return total lines

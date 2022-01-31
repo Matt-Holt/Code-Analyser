@@ -83,10 +83,6 @@ public class CodeReader {
 			}
 
 			allMetrics.add(metrics);
-			for (String k : metrics.getFields().keySet()) {
-				System.out.println(k + ": " + metrics.getFields().get(k));
-			}
-
 			scanner.close();
 		}
 		catch (Exception e) {

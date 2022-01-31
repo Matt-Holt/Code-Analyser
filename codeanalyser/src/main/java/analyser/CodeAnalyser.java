@@ -59,6 +59,8 @@ public class CodeAnalyser extends Application {
 	//Metrics
 	TextArea metricsList = new TextArea();
 	Button visualiseButton = new Button("Visualise Metrics");
+	Button methodsButton = new Button("View Methods");
+	Button fieldsButton = new Button("View Fields");
 	
 	//Arrays for different views
 	ArrayList<Node> mainScreen = new ArrayList<Node>();
@@ -142,7 +144,7 @@ public class CodeAnalyser extends Application {
 			showScreen(3);
 			
 			//Creates button for every file read by CodeReader class
-			for (int i = 0; i < reader.getAllMetrics().size(); i++){
+			for (int i = 0; i < reader.getAllMetrics().size(); i++) {
 				Metrics metric = reader.getAllMetrics().get(i);
 				Button button = new Button(metric.getFileName());
 				button.setLayoutX(25);
@@ -152,7 +154,8 @@ public class CodeAnalyser extends Application {
 				EventHandler<ActionEvent> metricsEvent = new EventHandler<ActionEvent>() {
 					@Override
 					public void handle(ActionEvent event) {
-						String text = "Class Name:					" + metric.getFileName() + "\n";
+						String text = "Name:						" + metric.getFileName() + "\n";
+						text += "Type:						" + metric.getType() + "\n";
 						text += "Total Lines:					" + metric.getTotalLines() + "\n";
 						text += "Total Comment Lines:			" + metric.getCommentLines() + "\n";
 						text += "Total Methods:				" + metric.getMethods().size() + "\n";
@@ -171,7 +174,39 @@ public class CodeAnalyser extends Application {
 							}
 						};
 						
+						EventHandler<ActionEvent> showFields = new EventHandler<ActionEvent>() {
+							@Override
+							public void handle(ActionEvent event) {
+								String text = "";
+								for (String f : metric.getFields().keySet()) {
+									text += f + "\n";
+								}
+								
+								if (text.length() > 0)
+									metricsList.setText(text);
+								else
+									metricsList.setText("This file does not have any methods.");
+							}
+						};
+						
+						EventHandler<ActionEvent> showMethods = new EventHandler<ActionEvent>() {
+							@Override
+							public void handle(ActionEvent event) {
+								String text = "";
+								for (String m : metric.getMethods().keySet()) {
+									text += m + "\n";
+								}
+								
+								if (text.length() > 0)
+									metricsList.setText(text);
+								else
+									metricsList.setText("This file does not have any fields.");
+							}
+						};
+						
 						visualiseButton.setOnAction(showGraphs);
+						fieldsButton.setOnAction(showFields);
+						methodsButton.setOnAction(showMethods);
 					}
 				};
 
@@ -264,11 +299,21 @@ public class CodeAnalyser extends Application {
 		Font metricsFont = metricsList.getFont();
 		float metricsFSize = (float)metricsFont.getSize() + 10.0f;
 		metricsList.setFont(metricsFont.font(metricsFSize));
-		
+
 		visualiseButton.setScaleX(1.5);
 		visualiseButton.setScaleY(1.5);
 		visualiseButton.setLayoutX(290);
 		visualiseButton.setLayoutY(650);
+
+		fieldsButton.setScaleX(1.5);
+		fieldsButton.setScaleY(1.5);
+		fieldsButton.setLayoutX(490);
+		fieldsButton.setLayoutY(650);
+
+		methodsButton.setScaleX(1.5);
+		methodsButton.setScaleY(1.5);
+		methodsButton.setLayoutX(690);
+		methodsButton.setLayoutY(650);
 		
 		//Add elements to scene
 		root.getChildren().add(canvas);
@@ -295,6 +340,8 @@ public class CodeAnalyser extends Application {
 		metricsScreen.add(backButton);
 		metricsScreen.add(metricsList);
 		metricsScreen.add(visualiseButton);
+		metricsScreen.add(methodsButton);
+		metricsScreen.add(fieldsButton);
 		
 		visualisedScreen.add(toMetricsButton);
 		
