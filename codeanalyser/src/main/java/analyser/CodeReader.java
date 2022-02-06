@@ -75,7 +75,7 @@ public class CodeReader {
 	private void readFile(File file) {
 		try {
 			Scanner scanner = new Scanner(file);
-			Metrics metrics = new Metrics(file.getName());
+			Metrics metrics = new Metrics(file.getName(), file.length());
 			
 			//Sends each line to the metrics and smells class to be read
 			while (scanner.hasNextLine()) {

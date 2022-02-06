@@ -49,8 +49,10 @@ public class CodeAnalyser extends Application {
 	Button codeButton = new Button("Source Code");
 	Button metricsButton = new Button("Metrics");
 	Button smellsButton = new Button("Smells/Errors");
-	Button backButton = new Button("Go Back");;
+	Button overviewButton = new Button("Overview");
+	Button backButton = new Button("Go Back");
 	Button toMetricsButton = new Button("Go Back");
+	TextArea codeOverview = new TextArea();
 	
 	//Source Code
 	TextArea code = new TextArea();
@@ -93,6 +95,12 @@ public class CodeAnalyser extends Application {
 			code.clear();
 			reader.clearFiles();
 			showScreen(0);
+		}
+	};
+	EventHandler<ActionEvent> viewSelectionEvent = new EventHandler<ActionEvent>() {
+		@Override
+		public void handle(ActionEvent event) {
+			showScreen(1);
 		}
 	};
 	EventHandler<ActionEvent> viewSourceEvent = new EventHandler<ActionEvent>() {
@@ -155,6 +163,7 @@ public class CodeAnalyser extends Application {
 					@Override
 					public void handle(ActionEvent event) {
 						String text = "Name:						" + metric.getFileName() + "\n";
+						text += "Size:							" + metric.getSize() + "\n";
 						text += "Type:						" + metric.getType() + "\n";
 						text += "Total Lines:					" + metric.getTotalLines() + "\n";
 						text += "Total Comment Lines:			" + metric.getCommentLines() + "\n";
@@ -167,9 +176,9 @@ public class CodeAnalyser extends Application {
 							@Override
 							public void handle(ActionEvent event) {
 								showScreen(5);
-								Node pie = graph.generatePieChart(metric);
+								Node pie = graph.generateMethodsChart(metric);
 								root.getChildren().add(pie);
-								Node bar = graph.generateBarChart(metric);
+								Node bar = graph.generateFieldsChart(metric);
 								root.getChildren().add(bar);
 							}
 						};
@@ -178,14 +187,14 @@ public class CodeAnalyser extends Application {
 							@Override
 							public void handle(ActionEvent event) {
 								String text = "";
-								for (String f : metric.getFields().keySet()) {
-									text += f + "\n";
+								for (String key : metric.getFields().keySet()) {
+									text += key + ": " + metric.getFields().get(key) + " times used \n";
 								}
 								
 								if (text.length() > 0)
 									metricsList.setText(text);
 								else
-									metricsList.setText("This file does not have any methods.");
+									metricsList.setText("This file does not have any fields.");
 							}
 						};
 						
@@ -193,14 +202,15 @@ public class CodeAnalyser extends Application {
 							@Override
 							public void handle(ActionEvent event) {
 								String text = "";
-								for (String m : metric.getMethods().keySet()) {
-									text += m + "\n";
+								
+								for (String key : metric.getMethods().keySet()) {
+									text += key + ": " + metric.getMethods().get(key) + " lines long \n";
 								}
 								
 								if (text.length() > 0)
 									metricsList.setText(text);
 								else
-									metricsList.setText("This file does not have any fields.");
+									metricsList.setText("This file does not have any methods.");
 							}
 						};
 						
@@ -213,6 +223,12 @@ public class CodeAnalyser extends Application {
 				button.setOnAction(metricsEvent);
 				root.getChildren().add(button);
 			}
+		}
+	};
+	EventHandler<ActionEvent> viewSmellsEvent = new EventHandler<ActionEvent>() {
+		@Override
+		public void handle(ActionEvent event) {
+			showScreen(4);
 		}
 	};
 	
@@ -255,20 +271,25 @@ public class CodeAnalyser extends Application {
 		quitButton.setOnAction(quitEvent);
 
 		//Objects for selection screen
-		codeButton.setPrefSize((canvas.getWidth() - 100) / 3, 50);
-		codeButton.setLayoutX(12);
+		overviewButton.setPrefSize((canvas.getWidth() - 100) / 4, 50);
+		overviewButton.setLayoutX(42);
+		overviewButton.setLayoutY(20);
+		overviewButton.setOnAction(viewSelectionEvent);
+		
+		codeButton.setPrefSize((canvas.getWidth() - 100) / 4, 50);
+		codeButton.setLayoutX(342);
 		codeButton.setLayoutY(20);
 		codeButton.setOnAction(viewSourceEvent);
-		
-		metricsButton.setPrefSize((canvas.getWidth() - 100) / 3, 50);
-		metricsButton.setLayoutX(442);
+
+		metricsButton.setPrefSize((canvas.getWidth() - 100) / 4, 50);
+		metricsButton.setLayoutX(642);
 		metricsButton.setLayoutY(20);
 		metricsButton.setOnAction(viewMetricsEvent);
 		
-		smellsButton.setPrefSize((canvas.getWidth() - 100) / 3, 50);
-		smellsButton.setLayoutX(872);
+		smellsButton.setPrefSize((canvas.getWidth() - 100) / 4, 50);
+		smellsButton.setLayoutX(942);
 		smellsButton.setLayoutY(20);
-		smellsButton.setOnAction(viewMetricsEvent);
+		smellsButton.setOnAction(viewSmellsEvent);
 
 		backButton.setScaleX(1.5);
 		backButton.setScaleY(1.5);
@@ -281,6 +302,14 @@ public class CodeAnalyser extends Application {
 		toMetricsButton.setLayoutX(25);
 		toMetricsButton.setLayoutY(650);
 		toMetricsButton.setOnAction(viewMetricsEvent);
+
+		codeOverview.setLayoutX(42);
+		codeOverview.setLayoutY(80);
+		codeOverview.setPrefSize(500, 550);
+		codeOverview.setEditable(false);
+		Font overviewFont = metricsList.getFont();
+		float overviewFSize = (float)overviewFont.getSize() + 10.0f;
+		codeOverview.setFont(overviewFont.font(overviewFSize));
 		
 		//Source code screen
 		code.setLayoutX(265);
@@ -307,7 +336,7 @@ public class CodeAnalyser extends Application {
 
 		fieldsButton.setScaleX(1.5);
 		fieldsButton.setScaleY(1.5);
-		fieldsButton.setLayoutX(490);
+		fieldsButton.setLayoutX(500);
 		fieldsButton.setLayoutY(650);
 
 		methodsButton.setScaleX(1.5);
@@ -326,17 +355,21 @@ public class CodeAnalyser extends Application {
 		selectionScreen.add(codeButton);
 		selectionScreen.add(metricsButton);
 		selectionScreen.add(smellsButton);
+		selectionScreen.add(overviewButton);
 		selectionScreen.add(backButton);
+		selectionScreen.add(codeOverview);
 
 		sourceCodeScreen.add(codeButton);
 		sourceCodeScreen.add(metricsButton);
 		sourceCodeScreen.add(smellsButton);
+		sourceCodeScreen.add(overviewButton);
 		sourceCodeScreen.add(backButton);
 		sourceCodeScreen.add(code);
 		
 		metricsScreen.add(codeButton);
 		metricsScreen.add(metricsButton);
 		metricsScreen.add(smellsButton);
+		metricsScreen.add(overviewButton);
 		metricsScreen.add(backButton);
 		metricsScreen.add(metricsList);
 		metricsScreen.add(visualiseButton);
@@ -345,6 +378,7 @@ public class CodeAnalyser extends Application {
 		
 		visualisedScreen.add(toMetricsButton);
 		
+		smellsScreen.add(overviewButton);
 		smellsScreen.add(codeButton);
 		smellsScreen.add(metricsButton);
 		smellsScreen.add(smellsButton);
@@ -434,6 +468,14 @@ public class CodeAnalyser extends Application {
 		if (reader.getAllFiles().size() > 0)
 		{
 			reader.readAllFiles();
+			ArrayList<Metrics> files = reader.getAllMetrics();
+			String text = "This project is made up of " + files.size() + " files.\n"; 
+			
+			for (int j = 0; j < files.size(); j++)
+				text += files.get(j).getFileName() + ": " + files.get(j).getTotalLines() + " lines \n";
+			
+			codeOverview.setText(text);
+			selectionScreen.add(graph.generateOverviewChart(reader.getAllMetrics()));
 			showScreen(1);
 		}
 		else

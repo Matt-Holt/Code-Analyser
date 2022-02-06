@@ -1,5 +1,7 @@
 package graphs;
 
+import java.util.ArrayList;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -18,7 +20,7 @@ public class Graph {
 	 * @Param Metrics
 	 * @return PieChart
 	 */
-	public Node generatePieChart(Metrics metrics) {
+	public Node generateMethodsChart(Metrics metrics) {
 		ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 		
 		for (String k : metrics.getMethods().keySet()) {
@@ -42,7 +44,7 @@ public class Graph {
 	 * @Param Metrics
 	 * @return PieChart
 	 */
-	public Node generateBarChart(Metrics metrics) {
+	public Node generateFieldsChart(Metrics metrics) {
 
         CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
@@ -62,5 +64,30 @@ public class Graph {
 		barChart.setLayoutY(60);
 		barChart.setTitle("Most Used Fields");
 		return barChart;
+	}
+	
+	/**
+	 *Generates a pie chart from all files
+	 * 
+	 * @Param array list of Metrics
+	 * @return PieChart
+	 */
+	public Node generateOverviewChart(ArrayList<Metrics> metrics) {
+		ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
+		
+		for (Metrics m : metrics) {
+			String name = m.getFileName();
+			int val = m.getTotalLines();
+			String data = name + ": " + val;
+			pieChartData.add(new PieChart.Data(data, val));
+		}
+		
+		PieChart pieChart = new PieChart(pieChartData);
+		pieChart.setScaleX(1.2);
+		pieChart.setScaleY(1.2);
+		pieChart.setLayoutX(700);
+		pieChart.setLayoutY(120);
+		pieChart.setTitle("Current Project");
+		return pieChart;
 	}
 }

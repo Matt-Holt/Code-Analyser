@@ -1,6 +1,7 @@
 package metrics;
 
 import java.lang.reflect.Array;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -10,6 +11,7 @@ import javafx.scene.control.TextArea;
 public class Metrics {	
 	private String fileName = "";
 	private String type = "";
+	private String fileSize = "0B";
 	private int totalLines;
 	private int commentLines;
 	//<field, times_used>
@@ -18,6 +20,7 @@ public class Metrics {
 	private HashMap<String, Integer> methods = new HashMap<String, Integer>();
 	private String averageMethodComplexity;
 
+	private String[] currentLines;
 	private boolean inMethod;
 	private boolean inField;
 	private String methodKey;
@@ -29,10 +32,42 @@ public class Metrics {
 	 * Constructor for metrics
 	 * @param fileName
 	 */
-	public Metrics(String fileName) {
+	public Metrics(String fileName, long newSize) {
 		fileName = fileName.replace(".java", "");
 		this.fileName = fileName;
+
+		//Represents size in largest amount
+		double size = newSize;
+		int timesDivided = 0;
+		while (size / 1024 >= 1) {
+			size /= 1024;
+			timesDivided++;
+		}
+		
+		String sizeAmount = "";
+		switch(timesDivided)
+		{
+			case 0:
+				sizeAmount = " Bytes";
+				break;
+			case 1:
+				sizeAmount = "KB";
+				break;
+			case 2:
+				sizeAmount = "MB";
+				break;
+			case 3:
+				sizeAmount = "GB";
+				break;
+			default:
+				sizeAmount = "TB";
+				break;
+		}
+		
+		DecimalFormat df = new DecimalFormat("#.#");
+		fileSize = (Double.parseDouble(df.format(size))) + sizeAmount;
 	}
+	
 	
 	/**
 	 * Read line and analyse it for it's metrics
@@ -94,11 +129,20 @@ public class Metrics {
 						if (words.length > 1)
 							field = words[words.length - 1];
 					}
+					else {
+						
+					}
 					
 					//Adds to list if field is set
 					if (field.length() > 0)
-						fields.put(field, totalLines);
+						fields.put(field, 0);
 				}
+			}			
+
+			//Checks if line contains field
+			if (fields.size() > 0 && getFieldFromLine(t) != null) {
+				String k = getFieldFromLine(t);
+				fields.put(k, fields.get(k) + 1);
 			}
 			
 			if (t.contains("{"))
@@ -124,6 +168,22 @@ public class Metrics {
 			 }
 		}
 	}
+	
+	/**
+	 * returns field from a line
+	 * 
+	 * @param line
+	 * @return string
+	 */
+	private String getFieldFromLine(String line)
+	{
+		for (String k : fields.keySet()) {
+			if (line.contains(k))
+				return k;
+		}
+		
+		return null;
+	}
 
 	/**
 	 * @return className
@@ -136,6 +196,12 @@ public class Metrics {
 	 */
 	public String getType() {
 		return type;
+	}
+	/**
+	 * @return size
+	 */
+	public String getSize() {
+		return fileSize;
 	}
 	/**
 	 * @return total lines
