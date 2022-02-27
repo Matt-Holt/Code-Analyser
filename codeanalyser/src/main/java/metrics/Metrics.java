@@ -1,11 +1,9 @@
 package metrics;
 
-import java.lang.reflect.Array;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-
-import javafx.scene.control.TextArea;
 
 
 public class Metrics {	
@@ -14,19 +12,15 @@ public class Metrics {
 	private String fileSize = "0B";
 	private int totalLines;
 	private int commentLines;
-	//<field, times_used>
-	private HashMap<String, Integer> fields = new HashMap<String, Integer>();
-	//<method, lines_long>
-	private HashMap<String, Integer> methods = new HashMap<String, Integer>();
 	private String averageMethodComplexity;
-
-	private String[] currentLines;
-	private boolean inMethod;
-	private boolean inField;
-	private String methodKey;
-	private int startLine;
-	private int openCurlyBrackets = 0;
-	private int closedCurlyBrackets = 0;
+	private ArrayList<FieldMetrics> fields = new ArrayList<FieldMetrics>();
+	private ArrayList<MethodMetrics> methods = new ArrayList<MethodMetrics>();
+	public ArrayList<String> allLines = new ArrayList<String>();
+	private boolean inMethod = false;
+	private MethodMetrics currentMethod;
+	private int methodStartLine = -1;
+	public int openCurlyBrackets = 0;
+	public int closedCurlyBrackets = 0;
 	
 	/*
 	 * Constructor for metrics
@@ -76,113 +70,175 @@ public class Metrics {
 	 * @return nothing
 	 */
 	public void readLine(String line) {
-		String t = line.trim();
+		String t = line.trim();		
 		totalLines++;
 		
 		//Is a comment
 		if (t.startsWith("//") || t.startsWith("/*") || t.startsWith("*")) {
 			commentLines++;
+			return;
 		}
-		//Is a normal line
-		else {
-			
-			//Sets type of file
-			if (type.length() <= 0) {
-				if (line.toLowerCase().contains(" class"))
-					type = "Class";
-				else if (line.toLowerCase().contains(" enum"))
-					type = "Enum";
-				else if (line.toLowerCase().contains(" interface"))
-					type = "Interface";
-				else if (line.toLowerCase().contains(" module"))
-					type = "Module";
-			}
-			
-			//Method
-			if (t.contains("(") && t.contains(")")) {
-				if (openCurlyBrackets - 1 == closedCurlyBrackets && !t.contains("=")) {
-					String[] methodLine = t.split("\\(")[0].split(" ");
-					String method = methodLine[methodLine.length - 1];
-					methods.put(method, 1);
-					
-					//Application is now at start of method
-					startLine = totalLines;
-					methodKey = method;
-					inMethod = true;
+		
+		//If method continues, it is a normal line		
+		if (t.length() > 0) {
+			allLines.add(t);
+			checkForField(t);
+		}
+		
+		//Sets type of file
+		if (type.length() <= 0) {
+			String[] lineWords = line.toLowerCase().split(" ");
+			for (int i = 0; i < lineWords.length; i++) {
+				String word = lineWords[i];
+				if (word.equals("class") || word.equals("enum") || word.equals("interface") || word.equals("module")) {
+					type = word.toLowerCase();
+					break;
 				}
 			}
-			
-			//Variable
-			if (t.length() > 0) {
-				if (openCurlyBrackets - 1 == closedCurlyBrackets) {
-					String field = "";
-					if (t.contains("=")) {
-						//Gets each word before the semicolon 
-						String[] words = t.split("=")[0].split(" ");
-						
-						if (words.length > 1)
-							field = words[words.length - 1];
-					}
-					else if (t.contains(";") && t.length() > 1) {
-						String[] words = t.split(";")[0].split(" ");
-						
-						if (words.length > 1)
-							field = words[words.length - 1];
+		}
+
+		//Outside of methods but within' class
+		if (openCurlyBrackets - 1 == closedCurlyBrackets) {
+			//Method
+			if (containsValidChar(t, ')') && !containsValidChar(t, '=')) {
+				String methodLine = mergeLines(t);
+				if (methodLine.length() > 0) {
+					if (!containsValidChar(methodLine, '=')) {
+						//Add method
+						MethodMetrics m = new MethodMetrics(methodLine);
+						methods.add(m);
+						currentMethod = m;
+						inMethod = true;	
 					}
 					else {
-						
+						//Add field
+						FieldMetrics f = new FieldMetrics(methodLine);
+						fields.add(f);	
 					}
-					
-					//Adds to list if field is set
-					if (field.length() > 0)
-						fields.put(field, 0);
 				}
-			}			
-
-			//Checks if line contains field
-			if (fields.size() > 0 && getFieldFromLine(t) != null) {
-				String k = getFieldFromLine(t);
-				fields.put(k, fields.get(k) + 1);
 			}
 			
-			if (t.contains("{"))
+			//Field
+			else if (containsValidChar(t, ';')) {
+				String fieldLine = mergeLines(t);
+				if (fieldLine.length() > 0) {
+					FieldMetrics f = new FieldMetrics(fieldLine);
+					fields.add(f);	
+				}
+			}
+		}
+		
+		if (containsValidChar(t, '{')) {
+			if (inMethod && openCurlyBrackets - 1 == closedCurlyBrackets)
+				methodStartLine = totalLines + 1;
+
+			countValidCurlyBrackets(t);
+		}
+		
+		if (containsValidChar(t, '}')) {
+			countValidCurlyBrackets(t);
+			
+			/**
+			 * Checks if current line is outside of method if it is
+			 * find difference between method start line and current line
+			 */
+			if (inMethod && openCurlyBrackets - 1 == closedCurlyBrackets) {
+				int methodLines = totalLines - methodStartLine;
+				currentMethod.setNumOfLines(methodLines);
+				methodStartLine = -1;
+				inMethod = false;
+			}
+		}
+	}
+	
+	private void countValidCurlyBrackets(String line) {
+		boolean valid = true;
+		for (int i = 0; i < line.length(); i++) {
+			char ch = line.charAt(i);
+			if (ch == '\"' || ch == '\'')
+				valid = !valid;
+
+			if (ch == '{' && valid)
 				openCurlyBrackets++;
 			
-			if (t.contains("}")) {
+			if (ch == '}' && valid)
 				closedCurlyBrackets++;
-				
-				/**
-				 * Checks if current line is outside of method if it is
-				 * find difference between method start line and current line
-				 */
-				if (inMethod && openCurlyBrackets - 1 == closedCurlyBrackets) {
-					int methodLines = (totalLines - 1) - startLine;
-					methods.put(methodKey, methodLines);
-					inMethod = false;
-				}
-			}
-
-			//If still in field and reaches end of it
-			 if (inField && t.contains(";")) {
-				 inField = false;
-			 }
 		}
 	}
 	
 	/**
-	 * returns field from a line
-	 * 
+	 * Checks line for any fields
 	 * @param line
-	 * @return string
+	 * @return nothing
 	 */
-	private String getFieldFromLine(String line)
-	{
-		for (String k : fields.keySet()) {
-			if (line.contains(k))
-				return k;
+	private void checkForField(String line) {
+		for (int i = 0; i < fields.size(); i++) {			
+			FieldMetrics field = fields.get(i);
+			String fieldName = field.getFieldName();	
+			
+			//Continues to next iteration in loop if field is not in line
+			if (!line.contains(fieldName))
+				continue;
+			
+			int startPos = line.indexOf(fieldName) - 1;
+			int endPos = line.indexOf(fieldName) + fieldName.length();
+			char before = ' ';
+			char after = ' ';
+			
+			//Sets char for before and after field
+			if (startPos >= 0) {
+				before = line.charAt(startPos);
+				
+				if (endPos < line.length())
+					after = line.charAt(endPos);
+			}
+			
+			//Increments use counter
+			if (!Character.isLetter(before) && !Character.isLetter(after))
+				field.setUseCount(field.getUseCount() + 1);
 		}
-		
-		return null;
+	}
+	
+	/**
+	 * Checks if char is in string and not surrounded by "" or ''
+	 * 
+	 * @param String line, char c
+	 * @return boolean
+	 */
+	private boolean containsValidChar(String line, char c) {
+		boolean valid = true;
+		for (int i = 0; i < line.length(); i++) {
+			char ch = line.charAt(i);
+			if (ch == '\"' || ch == '\'')
+				valid = !valid;
+			
+			if (ch == c && valid)
+				return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Merges any keyword spilling onto other lines
+	 * into one line
+	 * 
+	 * @param exception
+	 * @return
+	 */
+	private String mergeLines(String exception) {
+		String line = "";
+		for (int i = allLines.size() - 1; i >= 0; i--)
+		{
+			String l = allLines.get(i);
+			
+			if (!l.equals(exception)) {
+				if (containsValidChar(l, '}') || containsValidChar(l, '{') || containsValidChar(l, ';'))
+					return line;
+			}
+			
+			line = l + " " + line;
+		}
+		return "";
 	}
 
 	/**
@@ -218,13 +274,13 @@ public class Metrics {
 	/**
 	 * @return array of variables
 	 */
-	public HashMap<String, Integer> getFields() {
+	public ArrayList<FieldMetrics> getFields() {
 		return fields;
 	}
 	/**
 	 * @return array of methods
 	 */
-	public HashMap<String, Integer> getMethods() {
+	public ArrayList<MethodMetrics> getMethods() {
 		return methods;
 	}
 	/**

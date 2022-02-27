@@ -10,6 +10,8 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
+import metrics.FieldMetrics;
+import metrics.MethodMetrics;
 import metrics.Metrics;
 
 public class Graph {
@@ -23,9 +25,10 @@ public class Graph {
 	public Node generateMethodsChart(Metrics metrics) {
 		ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 		
-		for (String k : metrics.getMethods().keySet()) {
-			int val = metrics.getMethods().get(k);
-			String data = k + "(): " + val;
+		for (MethodMetrics m : metrics.getMethods()) {
+			String name = m.getMethodName();
+			int val = m.getNumOfLines();
+			String data = name + ": " + val;
 			pieChartData.add(new PieChart.Data(data, val));
 		}
 		
@@ -45,18 +48,18 @@ public class Graph {
 	 * @return PieChart
 	 */
 	public Node generateFieldsChart(Metrics metrics) {
-
         CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
         BarChart<String,Number> barChart = new BarChart<String,Number>(xAxis,yAxis);
         
-		for (String k : metrics.getFields().keySet()) {
-			int val = metrics.getFields().get(k);
-			String data = k + ": " + val;
+        for (FieldMetrics f : metrics.getFields()) {
+        	String name = f.getFieldName();
+			int val = f.getUseCount();
+			String data = name + ": " + val;
 			XYChart.Series<String, Number> series = new XYChart.Series<>(); 
-			series.getData().add(new XYChart.Data<>(data, val)); ;
-			barChart.getData().add(series);
-		}
+			series.getData().add(new XYChart.Data<>(data, val));
+			barChart.getData().add(series);	
+        }
         
 		barChart.setScaleX(1.2);
 		barChart.setScaleY(1.2);
@@ -89,5 +92,17 @@ public class Graph {
 		pieChart.setLayoutY(120);
 		pieChart.setTitle("Current Project");
 		return pieChart;
+	}
+	
+	public
+	static
+	  void  
+	test 
+	(
+		String
+		test
+	)
+	{
+		
 	}
 }

@@ -9,15 +9,12 @@ import javax.swing.JOptionPane;
 
 import graphs.Graph;
 import javafx.application.Application;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.chart.PieChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -25,6 +22,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import metrics.FieldMetrics;
+import metrics.MethodMetrics;
 import metrics.Metrics;
 
 //Main file for the application
@@ -187,8 +186,11 @@ public class CodeAnalyser extends Application {
 							@Override
 							public void handle(ActionEvent event) {
 								String text = "";
-								for (String key : metric.getFields().keySet()) {
-									text += key + ": " + metric.getFields().get(key) + " times used \n";
+								for (FieldMetrics f : metric.getFields()) {
+									text += f.getFieldName() + "\n";
+									text += "Type:			" + f.getType() + "\n";
+									text += "Times used: 		" + f.getUseCount() + "\n";
+									text += "\n";
 								}
 								
 								if (text.length() > 0)
@@ -203,8 +205,22 @@ public class CodeAnalyser extends Application {
 							public void handle(ActionEvent event) {
 								String text = "";
 								
-								for (String key : metric.getMethods().keySet()) {
-									text += key + ": " + metric.getMethods().get(key) + " lines long \n";
+								for (MethodMetrics m : metric.getMethods()) {
+									text += m.getMethodName() + "\n";
+									text += "Return type:		" + m.getReturnType() + "\n";
+									text += "Lines:			" + m.getNumOfLines() + "\n";
+									text += "Arguments:		";
+									
+									String args = "";
+									for (int i = 0; i < m.getArguments().length; i++)
+										args += m.getArguments()[i] + ", ";
+									
+									if (!args.equals(", "))
+										text += args + "\n";
+									else
+										text += "NONE \n";
+									
+									text += "\n \n";
 								}
 								
 								if (text.length() > 0)
@@ -444,13 +460,11 @@ public class CodeAnalyser extends Application {
 			return;
 		
 		int i = file.getName().lastIndexOf(".");
-		String ext = "";
+		String ext = "directory";
 		
 		//Directories will return -1 since there's no dots
 		if (i >= 0)
 			ext = file.getName().substring(i + 1);
-		else
-			ext = "directory";
 		
 		//Java file
 		if (ext.equalsIgnoreCase("java"))
@@ -469,7 +483,7 @@ public class CodeAnalyser extends Application {
 		{
 			reader.readAllFiles();
 			ArrayList<Metrics> files = reader.getAllMetrics();
-			String text = "This project is made up of " + files.size() + " files.\n"; 
+			String text = "This project is made up of " + files.size() + " file(s).\n";
 			
 			for (int j = 0; j < files.size(); j++)
 				text += files.get(j).getFileName() + ": " + files.get(j).getTotalLines() + " lines \n";

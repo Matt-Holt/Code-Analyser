@@ -46,11 +46,9 @@ public class CodeReader {
 			for (String fileName : allFiles)
 			{
 				int i = fileName.indexOf(".");
-				String ext = "";
+				String ext = "directory";
 				if (i >= 0)
 					ext = fileName.substring(i + 1);
-				else
-					ext = "directory";
 				
 				//if Java file, add to list
 				if (ext.equalsIgnoreCase("java"))
