@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 import javax.swing.JOptionPane;
 
-import code_smells.CodeSmells;
+import code_smells.*;
 import metrics.Metrics;
 
 /*
@@ -80,6 +80,16 @@ public class CodeReader {
 				metrics.readLine(scanner.nextLine());
 			}
 
+			//Reads file for smells
+			SmellReader smellReader = new SmellReader(metrics, file);
+			
+			for (int i = 0; i < smellReader.getSmells().size(); i++) {
+				CodeSmells smell = smellReader.getSmells().get(i);
+				System.out.println(smell.getSmellName() + ", " + smell.getSmellType());
+				System.out.println(smell.getSmellDesc());
+				System.out.println();
+			}
+			
 			allMetrics.add(metrics);
 			scanner.close();
 		}

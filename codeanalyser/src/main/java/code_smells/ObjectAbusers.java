@@ -1,5 +1,19 @@
 package code_smells;
 
-public class ObjectAbusers extends CodeSmells {
+import java.io.File;
 
+import metrics.Metrics;
+
+/*
+ * Object orient abuses consist of:
+ * - complex switch statement
+ * - temporary fields
+ * - refused bequest (sub-class only uses some properties & methods of super)
+ * - classes performing identical functions with different method names
+ */
+public class ObjectAbusers {
+	
+	public ObjectAbusers(File file) {
+		
+	}
 }

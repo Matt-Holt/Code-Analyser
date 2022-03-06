@@ -9,7 +9,7 @@ import java.util.HashMap;
 public class Metrics {	
 	private String fileName = "";
 	private String type = "";
-	private String fileSize = "0B";
+	private String fileSize = "0 Bytes";
 	private int totalLines;
 	private int commentLines;
 	private String averageMethodComplexity;
