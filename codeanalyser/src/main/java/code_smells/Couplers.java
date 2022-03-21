@@ -11,9 +11,12 @@ import metrics.Metrics;
  * - message chains (a() -> b() -> c() -> d())
  * - middle man (class that only deligates work to another class)
  */
-public class Couplers extends CodeSmells {
+public class Couplers {
 
-	public Couplers(String name, String desc) {
-		super(name, desc);
+	private File file;
+	
+	//Constructor
+	public Couplers(File file) {
+		this.file = file;
 	}
 }

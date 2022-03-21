@@ -13,7 +13,10 @@ import metrics.Metrics;
  */
 public class ObjectAbusers {
 	
+	private File file;
+	
+	//Constructor
 	public ObjectAbusers(File file) {
-		
+		this.file = file;
 	}
 }

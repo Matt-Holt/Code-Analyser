@@ -80,15 +80,9 @@ public class CodeReader {
 				metrics.readLine(scanner.nextLine());
 			}
 
-			//Reads file for smells
+			//Reads file for all smells
 			SmellReader smellReader = new SmellReader(metrics, file);
-			
-			for (int i = 0; i < smellReader.getSmells().size(); i++) {
-				CodeSmells smell = smellReader.getSmells().get(i);
-				System.out.println(smell.getSmellName() + ", " + smell.getSmellType());
-				System.out.println(smell.getSmellDesc());
-				System.out.println();
-			}
+			allSmells.addAll(smellReader.getSmells());
 			
 			allMetrics.add(metrics);
 			scanner.close();

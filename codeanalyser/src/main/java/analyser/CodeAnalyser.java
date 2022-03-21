@@ -1,26 +1,40 @@
 package analyser;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+import code_smells.CodeSmells;
 import graphs.Graph;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import metrics.FieldMetrics;
 import metrics.MethodMetrics;
@@ -30,7 +44,9 @@ import metrics.Metrics;
 public class CodeAnalyser extends Application {
 	
 	//Scene essentials
-	Pane root = new Pane();
+	ScrollPane scroll = new ScrollPane();
+	 ScrollBar scrollBar = new ScrollBar();
+	Pane root = new Pane(scroll);
 	Canvas canvas;
 	GraphicsContext gc;
 	Scene scene;
@@ -38,10 +54,11 @@ public class CodeAnalyser extends Application {
 	//Main screen
 	Label tipLabel = new Label("Please upload a Java file or workspace: ");
 	Label descLabel = new Label("This application analyses any java code that you upload to it, "
-			+ "and then shows any code smells, errors, metrics and allows you to view the source \n"
-			+ "code in order to help developers with refactoring, so they can make their code as "
+			+ "and then it shows any code smells, errors, and metrics for each file and allows you to \n "
+			+ "view the source code in order to help developers with refactoring, so they can make their code as "
 			+ "easy to read as possible.");
-	Button uploadButton = new Button("Upload file or workspace");
+	Button uploadButton = new Button("Upload new file/project");
+	Button uploadRecentButton = new Button("Open most recent");
 	Button quitButton = new Button("Quit");
 
 	//Selection Screen
@@ -52,7 +69,7 @@ public class CodeAnalyser extends Application {
 	Button backButton = new Button("Go Back");
 	Button toMetricsButton = new Button("Go Back");
 	TextArea codeOverview = new TextArea();
-	
+
 	//Source Code
 	TextArea code = new TextArea();
 	ArrayList<Node> classButtons = new ArrayList<Node>();
@@ -62,6 +79,10 @@ public class CodeAnalyser extends Application {
 	Button visualiseButton = new Button("Visualise Metrics");
 	Button methodsButton = new Button("View Methods");
 	Button fieldsButton = new Button("View Fields");
+	
+	//Smells
+	ArrayList<String> typeData = new ArrayList<String>();
+	ComboBox<String> smellDropDown = new ComboBox<String>();
 	
 	//Arrays for different views
 	ArrayList<Node> mainScreen = new ArrayList<Node>();
@@ -79,7 +100,17 @@ public class CodeAnalyser extends Application {
 	EventHandler<ActionEvent> uploadEvent = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
-			upload();
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+			fileChooser.showOpenDialog(fileChooser);
+			File file = fileChooser.getSelectedFile();
+			upload(file);
+		}
+	};
+	EventHandler<ActionEvent> openRecentEvent = new EventHandler<ActionEvent>() {
+		@Override
+		public void handle(ActionEvent event) {
+			uploadFromRecent();
 		}
 	};
 	EventHandler<ActionEvent> quitEvent = new EventHandler<ActionEvent>() {
@@ -245,6 +276,7 @@ public class CodeAnalyser extends Application {
 		@Override
 		public void handle(ActionEvent event) {
 			showScreen(4);
+			renderCodeSmells();
 		}
 	};
 	
@@ -262,6 +294,10 @@ public class CodeAnalyser extends Application {
 		gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 		
 		//Objects for main screen
+		scrollBar.setOrientation(Orientation.VERTICAL);
+		scrollBar.setPrefHeight(canvas.getHeight() - 10);
+		scrollBar.setPrefWidth(20);
+		//scrollBar.setOnDragDetected(scrollEvent);
 		tipLabel.setScaleX(1.5);
 		tipLabel.setScaleY(1.5);
 		tipLabel.setLayoutX(102);
@@ -270,7 +306,7 @@ public class CodeAnalyser extends Application {
 		descLabel.setScaleX(1.5);
 		descLabel.setScaleY(1.5);
 		descLabel.setLayoutX(240);
-		descLabel.setLayoutY(230);
+		descLabel.setLayoutY(340);
 		
 		uploadButton.setPrefSize(canvas.getWidth() - 100, 100);
 		uploadButton.setLayoutX(50);
@@ -279,6 +315,14 @@ public class CodeAnalyser extends Application {
 		Font uploadFont = uploadButton.getFont();
 		float uploadFSize = (float)uploadFont.getSize() + 10.0f;
 		uploadButton.setFont(uploadFont.font(uploadFSize));
+
+		uploadRecentButton.setPrefSize(canvas.getWidth() - 100, 100);
+		uploadRecentButton.setLayoutX(50);
+		uploadRecentButton.setLayoutY(210);
+		uploadRecentButton.setOnAction(openRecentEvent);
+		Font uploadRFont = uploadRecentButton.getFont();
+		float uploadRFSize = (float)uploadRFont.getSize() + 10.0f;
+		uploadRecentButton.setFont(uploadRFont.font(uploadRFSize));
 
 		quitButton.setScaleX(1.5);
 		quitButton.setScaleY(1.5);
@@ -360,14 +404,29 @@ public class CodeAnalyser extends Application {
 		methodsButton.setLayoutX(690);
 		methodsButton.setLayoutY(650);
 		
+		//Smells
+		typeData.add("All");
+		typeData.add("Bloaters");
+		typeData.add("Object Orient Abusers");
+		typeData.add("Change Preventers");
+		typeData.add("Dispensables");
+		typeData.add("Couplers");
+		smellDropDown.setItems(FXCollections.observableList(typeData));
+		smellDropDown.setValue(smellDropDown.getItems().get(0));
+		smellDropDown.setScaleX(1.5f);
+		smellDropDown.setScaleY(1.5f);
+		smellDropDown.setLayoutX(1033);
+		smellDropDown.setLayoutY(100);
+		
 		//Add elements to scene
 		root.getChildren().add(canvas);
 
 		mainScreen.add(tipLabel);
 		mainScreen.add(descLabel);
 		mainScreen.add(uploadButton);
+		mainScreen.add(uploadRecentButton);
 		mainScreen.add(quitButton);
-		
+
 		selectionScreen.add(codeButton);
 		selectionScreen.add(metricsButton);
 		selectionScreen.add(smellsButton);
@@ -394,6 +453,8 @@ public class CodeAnalyser extends Application {
 		
 		visualisedScreen.add(toMetricsButton);
 		
+		smellsScreen.add(scrollBar);
+		smellsScreen.add((Node) smellDropDown);
 		smellsScreen.add(overviewButton);
 		smellsScreen.add(codeButton);
 		smellsScreen.add(metricsButton);
@@ -444,17 +505,12 @@ public class CodeAnalyser extends Application {
 	}
 	
 	/**
-	 * The method that uploads a class/workspace
+	 * Uploads a class/workspace
 	 * 
 	 * @param nothing
 	 * @return nothing
 	 */
-	public void upload() {
-		JFileChooser fileChooser = new JFileChooser();
-		fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		fileChooser.showOpenDialog(fileChooser);
-		File file = fileChooser.getSelectedFile();
-		
+	public void upload(File file) {		
 		//Exits method if user doesn't select file
 		if (file == null)
 			return;
@@ -488,12 +544,105 @@ public class CodeAnalyser extends Application {
 			for (int j = 0; j < files.size(); j++)
 				text += files.get(j).getFileName() + ": " + files.get(j).getTotalLines() + " lines \n";
 			
+			while (selectionScreen.size() >= 7)
+				selectionScreen.remove(selectionScreen.get(selectionScreen.size() - 1));
+			
 			codeOverview.setText(text);
 			selectionScreen.add(graph.generateOverviewChart(reader.getAllMetrics()));
+			saveToRecent(file.getPath());
 			showScreen(1);
 		}
 		else
 			showMessage("No java files found.");
+	}
+	
+	/**
+	 * Opens the most recent file/project from the recent
+	 * directories text file
+	 * 
+	 * @param nothing
+	 * @return nothing
+	 */
+	private void uploadFromRecent()
+	{
+		try {
+			File file = new File("recent_directories.txt");
+			Scanner scanner = new Scanner(file);
+			String path = scanner.nextLine();
+			
+			if (path.length() > 0)
+				upload(new File(path));
+			
+			System.out.println(path);
+				
+			scanner.close();
+		}
+		catch(NoSuchElementException e) {
+			showMessage("'recent_directories.txt' is empty.");
+			System.out.println(e);
+		}
+		catch (Exception e) {
+			showMessage("Cannot find 'recent_directories.txt' file.");
+			System.out.println(e);
+		}
+	}
+	
+	/**
+	 * Writes current directory opened as most recent
+	 * and adds it to text file so it can be read in the future
+	 * 
+	 * @param directory
+	 * @return nothing
+	 */
+	private void saveToRecent(String directory)
+	{
+		try {
+			File file = new File("recent_directories.txt");
+			PrintWriter writer = new PrintWriter(file);
+			writer.write(directory);
+			writer.close();
+		}
+		catch(Exception e) {
+			showMessage("Cannot save directory to 'recent_directories.txt'.");
+			System.out.println(e);
+		}
+	}
+	
+	private void renderCodeSmells() {
+		int n = 0;
+		double scrollBarValue = scrollBar.getValue() * 10;
+		String selectedSmellType = smellDropDown.getValue().toLowerCase();
+		for (int i = 0; i < reader.getAllSmells().size(); i++) {
+			CodeSmells smell = reader.getAllSmells().get(i);
+			String smellType = smell.getSmellType().toLowerCase();
+			
+			//Continues if it is not the right category of smell
+			if (!selectedSmellType.equals("all") && !smellType.equalsIgnoreCase(selectedSmellType))
+				continue;
+			
+			Text smellName = new Text(smell.getSmellName());
+			smellName.setLayoutX(60);
+			smellName.setLayoutY((n * 175) + 90 - scrollBarValue);
+			smellName.setScaleX(1.5f);
+			smellName.setScaleY(1.5f);
+			
+			TextArea smellDesc = new TextArea(smell.getSmellDesc());
+			smellDesc.setLayoutX(50);
+			smellDesc.setLayoutY((n * 175) + 100 - scrollBarValue);
+			smellDesc.setPrefSize(800, 125);
+			Background descBack = new Background(new BackgroundFill(Color.YELLOW, CornerRadii.EMPTY, Insets.EMPTY));
+			smellDesc.setBackground(descBack);
+			smellDesc.setWrapText(true);
+			smellDesc.setEditable(false);
+			smellDesc.setBorder(null);
+			Font smellFont = smellDesc.getFont();
+			float fontSize = (float)smellFont.getSize() + 5.0f;
+			smellDesc.setFont(smellFont.font(fontSize));
+			
+			root.getChildren().add(smellName);
+			root.getChildren().add(smellDesc);
+			n++;
+		}
 	}
 	
 	/**

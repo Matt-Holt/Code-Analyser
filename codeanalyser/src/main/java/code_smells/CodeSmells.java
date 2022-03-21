@@ -1,9 +1,5 @@
 package code_smells;
 
-import java.io.File;
-
-import metrics.Metrics;
-
 public class CodeSmells {
 
 	protected String smellName;
@@ -14,6 +10,7 @@ public class CodeSmells {
 	public CodeSmells(String name, String desc, String type) {
 		smellName = name;
 		smellDesc = desc;
+		smellType = type;
 	}
 
 	public String getSmellName() {

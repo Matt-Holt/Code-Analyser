@@ -12,7 +12,10 @@ import metrics.Metrics;
  */
 public class ChangePreventer {
 	
-	public ChangePreventer(Metrics metrics) {
-		
+	private File file;
+	
+	//Constructor
+	public ChangePreventer(File file) {
+		this.file = file;
 	}
 }
