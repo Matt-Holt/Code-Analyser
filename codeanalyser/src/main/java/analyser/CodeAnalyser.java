@@ -16,7 +16,6 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -24,9 +23,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollBar;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -44,9 +40,7 @@ import metrics.Metrics;
 public class CodeAnalyser extends Application {
 	
 	//Scene essentials
-	ScrollPane scroll = new ScrollPane();
-	 ScrollBar scrollBar = new ScrollBar();
-	Pane root = new Pane(scroll);
+	Pane root = new Pane();
 	Canvas canvas;
 	GraphicsContext gc;
 	Scene scene;
@@ -81,8 +75,14 @@ public class CodeAnalyser extends Application {
 	Button fieldsButton = new Button("View Fields");
 	
 	//Smells
-	ArrayList<String> typeData = new ArrayList<String>();
+	ArrayList<CodeSmellNode> smellNodes = new ArrayList<CodeSmellNode>();
 	ComboBox<String> smellDropDown = new ComboBox<String>();
+	Button prevPage = new Button("<-");
+	Button nextPage = new Button("->");
+	Label pageNum = new Label("1");
+	Button refresh = new Button("Refresh");
+	Label noSmellsLabel = new Label("No code smells detected");
+	private int page;
 	
 	//Arrays for different views
 	ArrayList<Node> mainScreen = new ArrayList<Node>();
@@ -97,6 +97,25 @@ public class CodeAnalyser extends Application {
 	Graph graph = new Graph();
 	
 	//EventHandler(s)
+
+	EventHandler<ActionEvent> prevPageEvent = new EventHandler<ActionEvent>() {
+		@Override
+		public void handle(ActionEvent event) {
+			if (page > 0)
+				page--;
+			
+			renderSmell(page);
+		}};
+
+		EventHandler<ActionEvent> nextPageEvent = new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				if (page < (smellNodes.size() / 3))
+					page++;
+				
+				renderSmell(page);
+			}};
+	
 	EventHandler<ActionEvent> uploadEvent = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
@@ -165,6 +184,7 @@ public class CodeAnalyser extends Application {
 						}
 						catch (Exception e) {
 							showMessage("No source code found.");
+							System.out.println(e);
 						}
 					}
 				};
@@ -276,7 +296,39 @@ public class CodeAnalyser extends Application {
 		@Override
 		public void handle(ActionEvent event) {
 			showScreen(4);
-			renderCodeSmells();
+			smellNodes.clear();
+			String selectedSmellType = smellDropDown.getValue().toLowerCase();
+			
+			for (int i = 0; i < reader.getAllSmells().size(); i++) {
+				CodeSmells smell = reader.getAllSmells().get(i);
+				String smellType = smell.getSmellType().toLowerCase();
+				
+				//Continues if it is not the right category of smell
+				if (!selectedSmellType.equals("all") && !smellType.equalsIgnoreCase(selectedSmellType))
+					continue;
+				
+				Text smellName = new Text(smell.getSmellName());
+				smellName.setLayoutX(60);
+				smellName.setScaleX(1.5f);
+				smellName.setScaleY(1.5f);
+				
+				TextArea smellDesc = new TextArea(smell.getSmellDesc());
+				smellDesc.setLayoutX(50);
+				smellDesc.setPrefSize(800, 125);
+				Background descBack = new Background(new BackgroundFill(Color.YELLOW, CornerRadii.EMPTY, Insets.EMPTY));
+				smellDesc.setBackground(descBack);
+				smellDesc.setWrapText(true);
+				smellDesc.setEditable(false);
+				smellDesc.setBorder(null);
+				Font smellFont = smellDesc.getFont();
+				float fontSize = (float)smellFont.getSize() + 5.0f;
+				smellDesc.setFont(Font.font(fontSize));
+
+				smellNodes.add(new CodeSmellNode(smellName, smellDesc));
+			}
+			
+			page = 0;
+			renderSmell(page);
 		}
 	};
 	
@@ -293,11 +345,7 @@ public class CodeAnalyser extends Application {
 		gc.setFill(Color.WHITESMOKE);
 		gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
 		
-		//Objects for main screen
-		scrollBar.setOrientation(Orientation.VERTICAL);
-		scrollBar.setPrefHeight(canvas.getHeight() - 10);
-		scrollBar.setPrefWidth(20);
-		//scrollBar.setOnDragDetected(scrollEvent);
+		//Objects for main screen		
 		tipLabel.setScaleX(1.5);
 		tipLabel.setScaleY(1.5);
 		tipLabel.setLayoutX(102);
@@ -314,7 +362,7 @@ public class CodeAnalyser extends Application {
 		uploadButton.setOnAction(uploadEvent);
 		Font uploadFont = uploadButton.getFont();
 		float uploadFSize = (float)uploadFont.getSize() + 10.0f;
-		uploadButton.setFont(uploadFont.font(uploadFSize));
+		uploadButton.setFont(Font.font(uploadFSize));
 
 		uploadRecentButton.setPrefSize(canvas.getWidth() - 100, 100);
 		uploadRecentButton.setLayoutX(50);
@@ -322,7 +370,7 @@ public class CodeAnalyser extends Application {
 		uploadRecentButton.setOnAction(openRecentEvent);
 		Font uploadRFont = uploadRecentButton.getFont();
 		float uploadRFSize = (float)uploadRFont.getSize() + 10.0f;
-		uploadRecentButton.setFont(uploadRFont.font(uploadRFSize));
+		uploadRecentButton.setFont(Font.font(uploadRFSize));
 
 		quitButton.setScaleX(1.5);
 		quitButton.setScaleY(1.5);
@@ -369,7 +417,7 @@ public class CodeAnalyser extends Application {
 		codeOverview.setEditable(false);
 		Font overviewFont = metricsList.getFont();
 		float overviewFSize = (float)overviewFont.getSize() + 10.0f;
-		codeOverview.setFont(overviewFont.font(overviewFSize));
+		codeOverview.setFont(Font.font(overviewFSize));
 		
 		//Source code screen
 		code.setLayoutX(265);
@@ -378,7 +426,7 @@ public class CodeAnalyser extends Application {
 		code.setEditable(false);
 		Font codeFont = code.getFont();
 		float codeFSize = (float)codeFont.getSize() + 3.0f;
-		code.setFont(codeFont.font(codeFSize));
+		code.setFont(Font.font(codeFSize));
 		
 		//Metrics screen
 		metricsList.setLayoutX(265);
@@ -387,7 +435,7 @@ public class CodeAnalyser extends Application {
 		metricsList.setEditable(false);
 		Font metricsFont = metricsList.getFont();
 		float metricsFSize = (float)metricsFont.getSize() + 10.0f;
-		metricsList.setFont(metricsFont.font(metricsFSize));
+		metricsList.setFont(Font.font(metricsFSize));
 
 		visualiseButton.setScaleX(1.5);
 		visualiseButton.setScaleY(1.5);
@@ -405,6 +453,7 @@ public class CodeAnalyser extends Application {
 		methodsButton.setLayoutY(650);
 		
 		//Smells
+		ArrayList<String> typeData = new ArrayList<String>();
 		typeData.add("All");
 		typeData.add("Bloaters");
 		typeData.add("Object Orient Abusers");
@@ -417,6 +466,35 @@ public class CodeAnalyser extends Application {
 		smellDropDown.setScaleY(1.5f);
 		smellDropDown.setLayoutX(1033);
 		smellDropDown.setLayoutY(100);
+
+		noSmellsLabel.setScaleX(1.5f);
+		noSmellsLabel.setScaleY(1.5f);
+		noSmellsLabel.setLayoutX(400);
+		noSmellsLabel.setLayoutY(150);
+		noSmellsLabel.setVisible(false);
+
+		refresh.setScaleX(1.5);
+		refresh.setScaleY(1.5);
+		refresh.setLayoutX(1008);
+		refresh.setLayoutY(150);
+		refresh.setOnAction(viewSmellsEvent);
+
+		prevPage.setLayoutX(50);
+		prevPage.setLayoutY(575);
+		prevPage.setScaleX(1.5f);
+		prevPage.setScaleY(1.5f);
+		prevPage.setOnAction(prevPageEvent);
+		
+		nextPage.setLayoutX(815);
+		nextPage.setLayoutY(575);
+		nextPage.setScaleX(1.5f);
+		nextPage.setScaleY(1.5f);
+		nextPage.setOnAction(nextPageEvent);
+
+		pageNum.setScaleX(1.5f);
+		pageNum.setScaleY(1.5f);
+		pageNum.setLayoutX(425);
+		pageNum.setLayoutY(575);
 		
 		//Add elements to scene
 		root.getChildren().add(canvas);
@@ -452,14 +530,18 @@ public class CodeAnalyser extends Application {
 		metricsScreen.add(fieldsButton);
 		
 		visualisedScreen.add(toMetricsButton);
-		
-		smellsScreen.add(scrollBar);
+
 		smellsScreen.add((Node) smellDropDown);
+		smellsScreen.add(refresh);
 		smellsScreen.add(overviewButton);
 		smellsScreen.add(codeButton);
 		smellsScreen.add(metricsButton);
 		smellsScreen.add(smellsButton);
 		smellsScreen.add(backButton);
+		smellsScreen.add(nextPage);
+		smellsScreen.add(prevPage);
+		smellsScreen.add(pageNum);
+		smellsScreen.add(noSmellsLabel);
 		
 		primaryStage.setTitle("Code Analyser");
 		primaryStage.setScene(scene);
@@ -535,11 +617,11 @@ public class CodeAnalyser extends Application {
 		}
 		
 		//Goes to next screen if it finds java files
-		if (reader.getAllFiles().size() > 0)
-		{
+		if (reader.getAllFiles().size() > 0) {
 			reader.readAllFiles();
 			ArrayList<Metrics> files = reader.getAllMetrics();
-			String text = "This project is made up of " + files.size() + " file(s).\n";
+			String text = "This project contains " + reader.getAllSmells().size() + " code smell(s).\n\n";
+			text +=  "This project is made up of " + files.size() + " file(s).\n";
 			
 			for (int j = 0; j < files.size(); j++)
 				text += files.get(j).getFileName() + ": " + files.get(j).getTotalLines() + " lines \n";
@@ -563,8 +645,7 @@ public class CodeAnalyser extends Application {
 	 * @param nothing
 	 * @return nothing
 	 */
-	private void uploadFromRecent()
-	{
+	private void uploadFromRecent() {
 		try {
 			File file = new File("recent_directories.txt");
 			Scanner scanner = new Scanner(file);
@@ -572,8 +653,6 @@ public class CodeAnalyser extends Application {
 			
 			if (path.length() > 0)
 				upload(new File(path));
-			
-			System.out.println(path);
 				
 			scanner.close();
 		}
@@ -594,8 +673,7 @@ public class CodeAnalyser extends Application {
 	 * @param directory
 	 * @return nothing
 	 */
-	private void saveToRecent(String directory)
-	{
+	private void saveToRecent(String directory) {
 		try {
 			File file = new File("recent_directories.txt");
 			PrintWriter writer = new PrintWriter(file);
@@ -607,41 +685,35 @@ public class CodeAnalyser extends Application {
 			System.out.println(e);
 		}
 	}
-	
-	private void renderCodeSmells() {
+	/**
+	 * Renders all the code smells
+	 * 
+	 * @param page int
+	 * @return nothing
+	 */
+	private void renderSmell(int page) {
+		showScreen(4);
+		pageNum.setText((page + 1) + "");
 		int n = 0;
-		double scrollBarValue = scrollBar.getValue() * 10;
-		String selectedSmellType = smellDropDown.getValue().toLowerCase();
-		for (int i = 0; i < reader.getAllSmells().size(); i++) {
-			CodeSmells smell = reader.getAllSmells().get(i);
-			String smellType = smell.getSmellType().toLowerCase();
+		if (smellNodes.size() == 0)
+			noSmellsLabel.setVisible(true);
+		
+		//Renders next 3 smells in list
+		for (int i = (page * 3); i <= (page * 3 + 2); i++) {
+			if (i >= smellNodes.size())
+				return;
 			
-			//Continues if it is not the right category of smell
-			if (!selectedSmellType.equals("all") && !smellType.equalsIgnoreCase(selectedSmellType))
-				continue;
-			
-			Text smellName = new Text(smell.getSmellName());
-			smellName.setLayoutX(60);
-			smellName.setLayoutY((n * 175) + 90 - scrollBarValue);
-			smellName.setScaleX(1.5f);
-			smellName.setScaleY(1.5f);
-			
-			TextArea smellDesc = new TextArea(smell.getSmellDesc());
-			smellDesc.setLayoutX(50);
-			smellDesc.setLayoutY((n * 175) + 100 - scrollBarValue);
-			smellDesc.setPrefSize(800, 125);
-			Background descBack = new Background(new BackgroundFill(Color.YELLOW, CornerRadii.EMPTY, Insets.EMPTY));
-			smellDesc.setBackground(descBack);
-			smellDesc.setWrapText(true);
-			smellDesc.setEditable(false);
-			smellDesc.setBorder(null);
-			Font smellFont = smellDesc.getFont();
-			float fontSize = (float)smellFont.getSize() + 5.0f;
-			smellDesc.setFont(smellFont.font(fontSize));
-			
-			root.getChildren().add(smellName);
-			root.getChildren().add(smellDesc);
+			Node title = smellNodes.get(i).getTitle();
+			Node desc = smellNodes.get(i).getDesc();
+			title.setLayoutY((n * 160) + 90);
+			desc.setLayoutY((n * 160) + 98);
 			n++;
+			
+			if (!root.getChildren().contains(title))
+				root.getChildren().add(title);
+			
+			if (!root.getChildren().contains(desc))
+				root.getChildren().add(desc);
 		}
 	}
 	
@@ -653,6 +725,6 @@ public class CodeAnalyser extends Application {
 	 */
 	void showMessage(String message) {
 		JOptionPane alert = new JOptionPane();
-		alert.showMessageDialog(alert, message);
+		JOptionPane.showMessageDialog(alert, message);
 	}
 }

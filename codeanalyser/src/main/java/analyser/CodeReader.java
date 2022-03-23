@@ -71,6 +71,10 @@ public class CodeReader {
 	 * @return nothing
 	 */
 	private void readFile(File file) {
+		//Ignores module info file since it is not necessary to analyse
+		if (file.getName().equalsIgnoreCase("module-info.java"))
+			return;
+		
 		try {
 			Scanner scanner = new Scanner(file);
 			Metrics metrics = new Metrics(file.getName(), file.length());

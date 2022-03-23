@@ -2,8 +2,6 @@ package metrics;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 
 
 public class Metrics {	
@@ -15,7 +13,7 @@ public class Metrics {
 	private String averageMethodComplexity;
 	private ArrayList<FieldMetrics> fields = new ArrayList<FieldMetrics>();
 	private ArrayList<MethodMetrics> methods = new ArrayList<MethodMetrics>();
-	public ArrayList<String> allLines = new ArrayList<String>();
+	public ArrayList<String> allCodeLines = new ArrayList<String>();
 	private boolean inMethod = false;
 	private MethodMetrics currentMethod;
 	private int methodStartLine = -1;
@@ -81,7 +79,7 @@ public class Metrics {
 		
 		//If method continues, it is a normal line		
 		if (t.length() > 0) {
-			allLines.add(t);
+			allCodeLines.add(t);
 			checkForField(t);
 		}
 		
@@ -227,9 +225,9 @@ public class Metrics {
 	 */
 	private String mergeLines(String exception) {
 		String line = "";
-		for (int i = allLines.size() - 1; i >= 0; i--)
+		for (int i = allCodeLines.size() - 1; i >= 0; i--)
 		{
-			String l = allLines.get(i);
+			String l = allCodeLines.get(i);
 			
 			if (!l.equals(exception)) {
 				if (containsValidChar(l, '}') || containsValidChar(l, '{') || containsValidChar(l, ';'))
@@ -283,6 +281,14 @@ public class Metrics {
 	public ArrayList<MethodMetrics> getMethods() {
 		return methods;
 	}
+	/**
+	 * @param nothing
+	 * @return list of all lines
+	 */
+	public ArrayList<String> getAllCodeLines() {
+		return allCodeLines;
+	}
+	
 	/**
 	 * @return average method complexity
 	 */

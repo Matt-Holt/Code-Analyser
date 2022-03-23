@@ -33,7 +33,7 @@ public class SmellReader {
 		Dispensables dispensables = new Dispensables(file, metrics, this);
 		//ChangePreventer cPreventers = new ChangePreventer(file);
 		//Couplers couplers = new Couplers(file);
-		//ObjectAbusers objAbusers = new ObjectAbusers(file);
+		ObjectAbusers objAbusers = new ObjectAbusers(file, this);
 	}
 	
 	protected void createSmell(String name, String desc, String type) {
