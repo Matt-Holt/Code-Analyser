@@ -1,6 +1,7 @@
 package analyser;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
@@ -53,6 +54,9 @@ public class CodeAnalyser extends Application {
 			+ "easy to read as possible.");
 	Button uploadButton = new Button("Upload new file/project");
 	Button uploadRecentButton = new Button("Open most recent");
+	Button githubConnect = new Button("Connect");
+	TextArea githubBox = new TextArea();
+	Label gitHubLabel = new Label("https://www.github.com/");
 	Button quitButton = new Button("Quit");
 
 	//Selection Screen
@@ -97,7 +101,18 @@ public class CodeAnalyser extends Application {
 	Graph graph = new Graph();
 	
 	//EventHandler(s)
-
+	EventHandler<ActionEvent> githubEvent = new EventHandler<ActionEvent>() {
+		@Override
+		public void handle(ActionEvent event) {
+			try {
+				connectGithub(githubBox.getText());
+			} 
+			catch (IOException e) {
+				showMessage("Cannot retrieve github repository.");
+				System.out.println(e);
+			}
+		}};	
+	
 	EventHandler<ActionEvent> prevPageEvent = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
@@ -332,12 +347,12 @@ public class CodeAnalyser extends Application {
 		}
 	};
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		launch(args);
-	}
+    }
 
 	@Override
-	public void start(Stage primaryStage) throws Exception {
+	public void start(Stage primaryStage) throws Exception {	
 		//Sets scene
 		scene = new Scene(root, 1280, 720);
 		canvas = new Canvas(1280, 720);
@@ -354,7 +369,7 @@ public class CodeAnalyser extends Application {
 		descLabel.setScaleX(1.5);
 		descLabel.setScaleY(1.5);
 		descLabel.setLayoutX(240);
-		descLabel.setLayoutY(340);
+		descLabel.setLayoutY(420);
 		
 		uploadButton.setPrefSize(canvas.getWidth() - 100, 100);
 		uploadButton.setLayoutX(50);
@@ -363,7 +378,7 @@ public class CodeAnalyser extends Application {
 		Font uploadFont = uploadButton.getFont();
 		float uploadFSize = (float)uploadFont.getSize() + 10.0f;
 		uploadButton.setFont(Font.font(uploadFSize));
-
+		
 		uploadRecentButton.setPrefSize(canvas.getWidth() - 100, 100);
 		uploadRecentButton.setLayoutX(50);
 		uploadRecentButton.setLayoutY(210);
@@ -372,6 +387,25 @@ public class CodeAnalyser extends Application {
 		float uploadRFSize = (float)uploadRFont.getSize() + 10.0f;
 		uploadRecentButton.setFont(Font.font(uploadRFSize));
 
+		gitHubLabel.setLayoutX(150);
+		gitHubLabel.setLayoutY(335);
+		gitHubLabel.setScaleX(2.5);
+		gitHubLabel.setScaleY(2.5);
+		
+		githubBox.setPromptText("user-name/repository.git");
+		githubBox.setLayoutX(385);
+		githubBox.setLayoutY(320);
+		githubBox.setPrefSize(canvas.getWidth() - 800, 40);
+		Font githubFont = githubBox.getFont();
+		float gitFSize = (float)githubFont.getSize() + 10.0f;
+		githubBox.setFont(Font.font(gitFSize));
+
+		githubConnect.setLayoutX(900);
+		githubConnect.setLayoutY(340);
+		githubConnect.setScaleX(1.5);
+		githubConnect.setScaleY(1.5);
+		githubConnect.setOnAction(githubEvent);
+		
 		quitButton.setScaleX(1.5);
 		quitButton.setScaleY(1.5);
 		quitButton.setLayoutX(25);
@@ -415,7 +449,7 @@ public class CodeAnalyser extends Application {
 		codeOverview.setLayoutY(80);
 		codeOverview.setPrefSize(500, 550);
 		codeOverview.setEditable(false);
-		Font overviewFont = metricsList.getFont();
+		Font overviewFont = codeOverview.getFont();
 		float overviewFSize = (float)overviewFont.getSize() + 10.0f;
 		codeOverview.setFont(Font.font(overviewFSize));
 		
@@ -502,6 +536,9 @@ public class CodeAnalyser extends Application {
 		mainScreen.add(tipLabel);
 		mainScreen.add(descLabel);
 		mainScreen.add(uploadButton);
+		mainScreen.add(githubBox);
+		mainScreen.add(gitHubLabel);
+		mainScreen.add(githubConnect);
 		mainScreen.add(uploadRecentButton);
 		mainScreen.add(quitButton);
 
@@ -616,8 +653,11 @@ public class CodeAnalyser extends Application {
 			return;
 		}
 		
-		//Goes to next screen if it finds java files
+		// to next screen if it finds java files
 		if (reader.getAllFiles().size() > 0) {
+			for (int k = 0; k < reader.getAllFiles().size(); k++)
+				System.out.println(reader.getAllFiles().get(k));
+			
 			reader.readAllFiles();
 			ArrayList<Metrics> files = reader.getAllMetrics();
 			String text = "This project contains " + reader.getAllSmells().size() + " code smell(s).\n\n";
@@ -715,6 +755,17 @@ public class CodeAnalyser extends Application {
 			if (!root.getChildren().contains(desc))
 				root.getChildren().add(desc);
 		}
+	}
+	
+	/*
+	 * Accesses the github repository the user typed
+	 * 
+	 * @param nothing
+	 * @return nothing
+	 */
+	private void connectGithub(String path) throws IOException {
+		//reader.addFromGithub(path);
+		//showScreen(1);
 	}
 	
 	/**

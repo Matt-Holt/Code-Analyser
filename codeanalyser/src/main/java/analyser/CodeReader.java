@@ -1,12 +1,22 @@
 package analyser;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 import javax.swing.JOptionPane;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import code_smells.*;
+import errors.ErrorReader;
+import errors.Error;
 import metrics.Metrics;
 
 /*
@@ -17,6 +27,7 @@ public class CodeReader {
 	ArrayList<File> filesInDirectory = new ArrayList<File>();
 	ArrayList<Metrics> allMetrics = new ArrayList<Metrics>();
 	ArrayList<CodeSmells> allSmells = new ArrayList<CodeSmells>();
+	ArrayList<Error> allErrors = new ArrayList<Error>();
 	
 	/**
 	 * Adds file to the filesInDirectory array
@@ -36,8 +47,7 @@ public class CodeReader {
 	 * @param path
 	 * @return nothing
 	 */
-	public void addFromDirectory(String path) {
-		//directoryPath = path;
+	public void addFromDirectory(String path) {		
 		File file = new File(path);
 		String[] allFiles = file.list();
 		
@@ -54,12 +64,79 @@ public class CodeReader {
 				if (ext.equalsIgnoreCase("java"))
 				{
 					File newFile = new File(path + "\\" + fileName);
-					filesInDirectory.add(newFile);
+					addFile(newFile);
 				}
 				//If directory, get it's contents by looping again
 				else if (ext.equalsIgnoreCase("directory"))
 					addFromDirectory(path + "\\" + fileName);
 			}
+		}
+	}
+
+	
+	/**
+	 * A recursive method that goes through all paths of
+	 * a ones github directory creating java files based on the
+	 * content there
+	 * 
+	 * @param path
+	 * @return nothing
+	 * */
+	public void addFromGithub(String path) throws IOException {
+		final Document doc = Jsoup.connect("https://github.com/" + path).get();
+		Elements elements = doc.getElementsByClass("js-details-container Details");
+		elements = elements.select("a");
+		elements.select("js-navigation-open Link--primary");
+		    
+		for (int i = 0; i < elements.size(); i++) {
+		 Element e = elements.get(i);
+			    
+		 if (!e.className().equals("js-navigation-open Link--primary"))
+			 continue;
+			    
+			String href = e.attr("href");
+			int j = e.text().lastIndexOf(".");
+			String ext = "directory";
+				
+			//Directories will return -1 since there's no dots
+			if (j >= 0)
+				ext = e.text().substring(j + 1);
+			
+			if (ext.equalsIgnoreCase("java")) {
+				createFileFromHref(href, e.text());
+			}
+			else if (ext.equalsIgnoreCase("directory")) {
+				addFromGithub(href);
+			}
+		}
+	}
+	
+	/**
+	 * Creates a file from link to github file
+	 * 
+	 * @param href
+	 * @return nothing
+	 */
+	private void createFileFromHref(String href, String name) {
+		try {
+			File file = new File(name);
+			PrintWriter w = new PrintWriter(file);
+			final Document doc = Jsoup.connect("https://github.com/" + href).get();
+			Elements elements = doc.getElementsByClass("highlight tab-size js-file-line-container js-code-nav-container js-tagsearch-file");
+			elements = elements.select("td");
+			
+			for (int i = 0; i < elements.size(); i++) {
+				Element e = elements.get(i);
+				w.write(e.text() + "\n");
+			}
+			
+			w.close();
+			addFile(file);
+		}
+		catch (Exception e) {
+			JOptionPane alert = new JOptionPane();
+			alert.showMessageDialog(alert, e);
+			System.out.println(e);
 		}
 	}
 	
@@ -87,9 +164,15 @@ public class CodeReader {
 			//Reads file for all smells
 			SmellReader smellReader = new SmellReader(metrics, file);
 			allSmells.addAll(smellReader.getSmells());
+
+			//Reads file for all errors
+			ErrorReader errorReader = new ErrorReader(file);
+			allErrors.addAll(errorReader.getErrors());
 			
 			allMetrics.add(metrics);
 			scanner.close();
+
+			System.out.println("7");
 		}
 		catch (Exception e) {
 			JOptionPane alert = new JOptionPane();
@@ -116,12 +199,12 @@ public class CodeReader {
 	 * @param nothing
 	 * @return nothing
 	 */
-	private void printFileNames() {
+	public void printFileNames() {
 		if (filesInDirectory.size() >= 0) {
 			System.out.println("This directory contains the following java files:");
 			
 			for (int i = 0; i < filesInDirectory.size(); i++)
-				System.out.println(i+1 + ". " + filesInDirectory.get(i).getName());	
+				System.out.println(i + 1 + ". " + filesInDirectory.get(i).getName());	
 		}
 		else {
 			System.out.println("There are no java files here...");

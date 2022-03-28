@@ -2,8 +2,6 @@ package code_smells;
 
 import java.io.File;
 import java.util.ArrayList;
-
-import metrics.MethodMetrics;
 import metrics.Metrics;
 
 /*
@@ -23,17 +21,18 @@ public class SmellReader {
 	}
 	
 	/**
-	 * Read line and analyse it for it's smells
+	 * Passes file to all other smell files to analyse them
+	 * for those types of smells.
 	 * 
 	 * @param line
 	 * @return nothing
 	 */
 	public void readFile() {
-		Bloaters bloaters = new Bloaters(metrics, this);
-		Dispensables dispensables = new Dispensables(file, metrics, this);
-		//ChangePreventer cPreventers = new ChangePreventer(file);
-		//Couplers couplers = new Couplers(file);
-		ObjectAbusers objAbusers = new ObjectAbusers(file, this);
+		new Bloaters(metrics, this);
+		new Dispensables(file, metrics, this);
+		new ChangePreventer(file);
+		new Couplers(file);
+		new ObjectAbusers(file, this);
 	}
 	
 	protected void createSmell(String name, String desc, String type) {

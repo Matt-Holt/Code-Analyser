@@ -3,6 +3,8 @@ package metrics;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+import other.Code;
+
 
 public class Metrics {	
 	private String fileName = "";
@@ -17,8 +19,7 @@ public class Metrics {
 	private boolean inMethod = false;
 	private MethodMetrics currentMethod;
 	private int methodStartLine = -1;
-	public int openCurlyBrackets = 0;
-	public int closedCurlyBrackets = 0;
+	private Code code = new Code();
 	
 	/*
 	 * Constructor for metrics
@@ -96,12 +97,12 @@ public class Metrics {
 		}
 
 		//Outside of methods but within' class
-		if (openCurlyBrackets - 1 == closedCurlyBrackets) {
+		if (code.isOutsideMethod()) {
 			//Method
-			if (containsValidChar(t, ')') && !containsValidChar(t, '=')) {
+			if (code.containsValidChar(t, ')') && !code.containsValidChar(t, '=')) {
 				String methodLine = mergeLines(t);
 				if (methodLine.length() > 0) {
-					if (!containsValidChar(methodLine, '=')) {
+					if (!code.containsValidChar(methodLine, '=')) {
 						//Add method
 						MethodMetrics m = new MethodMetrics(methodLine);
 						methods.add(m);
@@ -117,7 +118,7 @@ public class Metrics {
 			}
 			
 			//Field
-			else if (containsValidChar(t, ';')) {
+			else if (code.containsValidChar(t, ';')) {
 				String fieldLine = mergeLines(t);
 				if (fieldLine.length() > 0) {
 					FieldMetrics f = new FieldMetrics(fieldLine);
@@ -126,41 +127,26 @@ public class Metrics {
 			}
 		}
 		
-		if (containsValidChar(t, '{')) {
-			if (inMethod && openCurlyBrackets - 1 == closedCurlyBrackets)
+		if (code.containsValidChar(t, '{')) {
+			if (inMethod && code.isOutsideMethod())
 				methodStartLine = totalLines + 1;
 
-			countValidCurlyBrackets(t);
+			code.countValidCurlyBrackets(t);
 		}
 		
-		if (containsValidChar(t, '}')) {
-			countValidCurlyBrackets(t);
+		if (code.containsValidChar(t, '}')) {
+			code.countValidCurlyBrackets(t);
 			
 			/**
 			 * Checks if current line is outside of method if it is
 			 * find difference between method start line and current line
 			 */
-			if (inMethod && openCurlyBrackets - 1 == closedCurlyBrackets) {
+			if (inMethod && code.isOutsideMethod()) {
 				int methodLines = totalLines - methodStartLine;
 				currentMethod.setNumOfLines(methodLines);
 				methodStartLine = -1;
 				inMethod = false;
 			}
-		}
-	}
-	
-	private void countValidCurlyBrackets(String line) {
-		boolean valid = true;
-		for (int i = 0; i < line.length(); i++) {
-			char ch = line.charAt(i);
-			if (ch == '\"' || ch == '\'')
-				valid = !valid;
-
-			if (ch == '{' && valid)
-				openCurlyBrackets++;
-			
-			if (ch == '}' && valid)
-				closedCurlyBrackets++;
 		}
 	}
 	
@@ -196,25 +182,6 @@ public class Metrics {
 				field.setUseCount(field.getUseCount() + 1);
 		}
 	}
-	
-	/**
-	 * Checks if char is in string and not surrounded by "" or ''
-	 * 
-	 * @param String line, char c
-	 * @return boolean
-	 */
-	private boolean containsValidChar(String line, char c) {
-		boolean valid = true;
-		for (int i = 0; i < line.length(); i++) {
-			char ch = line.charAt(i);
-			if (ch == '\"' || ch == '\'')
-				valid = !valid;
-			
-			if (ch == c && valid)
-				return true;
-		}
-		return false;
-	}
 
 	/**
 	 * Merges any keyword spilling onto other lines
@@ -230,7 +197,7 @@ public class Metrics {
 			String l = allCodeLines.get(i);
 			
 			if (!l.equals(exception)) {
-				if (containsValidChar(l, '}') || containsValidChar(l, '{') || containsValidChar(l, ';'))
+				if (code.containsValidChar(l, '}') || code.containsValidChar(l, '{') || code.containsValidChar(l, ';'))
 					return line;
 			}
 			
