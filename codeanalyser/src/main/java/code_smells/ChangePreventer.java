@@ -13,9 +13,16 @@ import metrics.Metrics;
 public class ChangePreventer {
 	
 	private File file;
+	private SmellReader sReader;
 	
 	//Constructor
-	public ChangePreventer(File file) {
+	public ChangePreventer(File file, SmellReader sReader) {
 		this.file = file;
+		this.sReader = sReader;
+		checkForSmells();
+	}
+	
+	private void checkForSmells() {
+		
 	}
 }

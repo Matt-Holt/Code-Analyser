@@ -669,9 +669,6 @@ public class CodeAnalyser extends Application {
 	 * @return nothing
 	 */
 	private void renderOverview() {
-		for (int k = 0; k < reader.getAllFiles().size(); k++)
-			System.out.println(reader.getAllFiles().get(k));
-		
 		reader.readAllFiles();
 		ArrayList<Metrics> files = reader.getAllMetrics();
 		String text = "This project contains " + reader.getAllSmells().size() + " code smell(s).\n\n";

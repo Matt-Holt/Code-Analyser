@@ -1,7 +1,6 @@
 package analyser;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -17,9 +16,7 @@ import org.jsoup.select.Elements;
 import code_smells.*;
 import errors.ErrorReader;
 import errors.Error;
-import metrics.MethodMetrics;
 import metrics.Metrics;
-import other.Code;
 
 /*
  * Handles the java files and sends them to the code smells,
@@ -163,7 +160,7 @@ public class CodeReader {
 				metrics.readLine(scanner.nextLine());
 
 			//Reads file for all smells
-			SmellReader smellReader = new SmellReader(metrics, file);
+			SmellReader smellReader = new SmellReader(metrics, file, allMetrics);
 			allSmells.addAll(smellReader.getSmells());
 
 			//Reads file for all errors

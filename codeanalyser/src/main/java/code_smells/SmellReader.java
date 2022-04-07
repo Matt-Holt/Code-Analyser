@@ -2,6 +2,8 @@ package code_smells;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import metrics.Metrics;
 
 /*
@@ -10,13 +12,16 @@ import metrics.Metrics;
  */
 public class SmellReader {
 	private ArrayList<CodeSmells> smells = new ArrayList<CodeSmells>();
+	private HashMap<File, Metrics> filesRead = new HashMap<File, Metrics>();
 	private Metrics metrics;
+	private ArrayList<Metrics> allMetrics;
 	private File file;
 	
 	//Constructor
-	public SmellReader(Metrics metrics, File file) {
+	public SmellReader(Metrics metrics, File file, ArrayList<Metrics> allMetrics) {
 		this.metrics = metrics;
 		this.file = file;
+		this.allMetrics = allMetrics;
 		readFile();
 	}
 	
@@ -30,9 +35,11 @@ public class SmellReader {
 	public void readFile() {
 		new Bloaters(metrics, this);
 		new Dispensables(file, metrics, this);
-		//ChangePreventer(file, this);
+		new ChangePreventer(file, this);
 		new Couplers(file, metrics, this);
-		new ObjectAbusers(file, this);
+		new ObjectAbusers(file, metrics, allMetrics, this);
+		
+		filesRead.put(file, metrics);
 	}
 	
 	protected void createSmell(String name, String desc, String type) {
