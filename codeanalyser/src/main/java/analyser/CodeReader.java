@@ -17,7 +17,9 @@ import org.jsoup.select.Elements;
 import code_smells.*;
 import errors.ErrorReader;
 import errors.Error;
+import metrics.MethodMetrics;
 import metrics.Metrics;
+import other.Code;
 
 /*
  * Handles the java files and sends them to the code smells,
@@ -119,7 +121,7 @@ public class CodeReader {
 	 */
 	private void createFileFromHref(String href, String name) {
 		try {
-			File file = new File(name);
+			File file = File.createTempFile(name, ".java");
 			PrintWriter w = new PrintWriter(file);
 			final Document doc = Jsoup.connect("https://github.com/" + href).get();
 			Elements elements = doc.getElementsByClass("highlight tab-size js-file-line-container js-code-nav-container js-tagsearch-file");
@@ -157,9 +159,8 @@ public class CodeReader {
 			Metrics metrics = new Metrics(file.getName(), file.length());
 			
 			//Sends each line to the metrics and smells class to be read
-			while (scanner.hasNextLine()) {
+			while (scanner.hasNextLine())
 				metrics.readLine(scanner.nextLine());
-			}
 
 			//Reads file for all smells
 			SmellReader smellReader = new SmellReader(metrics, file);
@@ -171,8 +172,6 @@ public class CodeReader {
 			
 			allMetrics.add(metrics);
 			scanner.close();
-
-			System.out.println("7");
 		}
 		catch (Exception e) {
 			JOptionPane alert = new JOptionPane();

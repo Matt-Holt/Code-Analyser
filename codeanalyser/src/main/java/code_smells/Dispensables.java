@@ -1,9 +1,11 @@
 package code_smells;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import metrics.FieldMetrics;
 import metrics.Metrics;
+import other.Code;
 
 /*
  * Dispensables consist of:
@@ -19,6 +21,7 @@ public class Dispensables {
 	private File file;
 	private Metrics metrics;
 	private SmellReader sReader;
+	private Code code = new Code();
 	String type = "Dispensables";
 	
 	//Constructor
@@ -32,6 +35,9 @@ public class Dispensables {
 	private void checkForSmells() {
 		//Checks for any unused fields
 		checkFields();
+		//Checks for duplicate code
+		checkForDuplicates();
+		
 		
 		//Checks if class is necessary
 		if (metrics.getAllCodeLines().size() <= 10) {
@@ -70,6 +76,29 @@ public class Dispensables {
 				metrics.getFileName() + "' is unused. It may as well be removed.";
 				sReader.createSmell(name, desc, type);
 			}
+		}
+	}
+	
+	private void checkForDuplicates() {
+		ArrayList<String> lines = metrics.getAllCodeLines();
+		lines.sort(null);
+		boolean isDuplicate = false;
+		
+		for (int i = 1; i < lines.size(); i++) {
+			String current = lines.get(i);
+			String previous = lines.get(i - 1);
+			
+			if (code.isValidStatement(previous) && code.isValidStatement(current)) {
+				if (current.equalsIgnoreCase(previous) && (current.split(".").length > 1 || current.split(" ").length > 1))
+					isDuplicate = true;
+			}
+		}
+		
+		if (isDuplicate) {
+			String name = "Duplicate code";
+			String desc = "The class '" + metrics.getFileName() + "' contains duplicate code. " +
+			"It would be more efficient if there was extracted into a method.";
+			sReader.createSmell(name, desc, type);
 		}
 	}
 }

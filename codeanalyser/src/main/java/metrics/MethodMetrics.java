@@ -1,10 +1,13 @@
 package metrics;
 
+import java.util.ArrayList;
+
 public class MethodMetrics {
 	private String methodName;
 	private int numOfLines;
 	private String returnType;
 	private String[] arguments;
+	private ArrayList<String> codeLines = new ArrayList<String>();
 	
 	//Constructor for this class
 	public MethodMetrics(String methodLine) {
@@ -19,6 +22,11 @@ public class MethodMetrics {
 		String[] keyWords = methodLine.split(" ");
 		methodName = keyWords[keyWords.length - 1];
 		returnType = keyWords[keyWords.length - 2];
+	}
+	
+	//@param code line String
+	public void addCodeLine(String codeLine) {
+		codeLines.add(codeLine);
 	}
 	
 	//@param total num of lines
@@ -46,4 +54,8 @@ public class MethodMetrics {
 		return arguments;
 	}
 	
+	//@return code lines String
+	public ArrayList<String> getCodeLines() {
+		return codeLines;
+	}
 }

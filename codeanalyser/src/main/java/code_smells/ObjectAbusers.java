@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Scanner;
 
 import metrics.Metrics;
+import other.Code;
 
 /*
  * Object orient abuses consist of:
@@ -20,6 +21,7 @@ public class ObjectAbusers {
 	private File file;
 	SmellReader sReader;
 	String type = "Object Orient Abusers";
+	Code code = new Code();
 	
 	//Constructor
 	public ObjectAbusers(File file, SmellReader sReader) {
@@ -37,22 +39,30 @@ public class ObjectAbusers {
 			while (scanner.hasNextLine()) {
 				String line = scanner.nextLine().trim();
 				List<String> list = Arrays.asList(line.split(" "));
-
-				if (list.contains("switch") || list.contains("if"))
+				System.out.println(numOfCases);
+				
+				if (code.containsKeyWord(line, "switch")) {					
+					numOfCases = 0;
 					inStatement = true;
+				}
+				
 				
 				if (inStatement) {
-					if (list.contains("case") || list.contains("if") || list.contains("else") || list.contains("default"))
+					if (list.contains("case") || list.contains("default"))
 						numOfCases++;
+					
+					if (list.contains("}")) {						
+						if (numOfCases >= 4) {
+							String name = "Complex statement";
+						String desc = "The class '" + file.getName() + "' has a complex switch/if statement" + 
+								" consisting of " + numOfCases + " cases. A complex switch or series of if else statements " +
+								"may cause confusion when refactoring in the future.";
+						sReader.createSmell(name, desc, type);
+						}
+						
+						inStatement = false;
+					}
 				}
-			}
-			
-			if (numOfCases >= 4) {
-				String name = "Complex statement";
-			String desc = "The class '" + file.getName() + "' has a complex switch/if statement" + 
-					" consisting of " + numOfCases + " cases. A complex switch or series of if else statements " +
-					"may cause confusion when refactoring in the future.";
-			sReader.createSmell(name, desc, type);
 			}
 			
 			scanner.close();

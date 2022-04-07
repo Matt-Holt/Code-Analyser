@@ -2,11 +2,10 @@ package metrics;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-
 import other.Code;
 
-
 public class Metrics {	
+
 	private String fileName = "";
 	private String type = "";
 	private String fileSize = "0 Bytes";
@@ -78,10 +77,13 @@ public class Metrics {
 			return;
 		}
 		
+		if (methodStartLine >= 0)
+			currentMethod.addCodeLine(t);
+		
 		//If method continues, it is a normal line		
 		if (t.length() > 0) {
 			allCodeLines.add(t);
-			checkForField(t);
+			code.countFields(t, fields);
 		}
 		
 		//Sets type of file
@@ -107,7 +109,7 @@ public class Metrics {
 						MethodMetrics m = new MethodMetrics(methodLine);
 						methods.add(m);
 						currentMethod = m;
-						inMethod = true;	
+						inMethod = true;
 					}
 					else {
 						//Add field
@@ -144,42 +146,10 @@ public class Metrics {
 			if (inMethod && code.isOutsideMethod()) {
 				int methodLines = totalLines - methodStartLine;
 				currentMethod.setNumOfLines(methodLines);
+				currentMethod.getCodeLines().remove(currentMethod.getCodeLines().size() - 1);
 				methodStartLine = -1;
 				inMethod = false;
 			}
-		}
-	}
-	
-	/**
-	 * Checks line for any fields
-	 * @param line
-	 * @return nothing
-	 */
-	private void checkForField(String line) {
-		for (int i = 0; i < fields.size(); i++) {			
-			FieldMetrics field = fields.get(i);
-			String fieldName = field.getFieldName();	
-			
-			//Continues to next iteration in loop if field is not in line
-			if (!line.contains(fieldName))
-				continue;
-			
-			int startPos = line.indexOf(fieldName) - 1;
-			int endPos = line.indexOf(fieldName) + fieldName.length();
-			char before = ' ';
-			char after = ' ';
-			
-			//Sets char for before and after field
-			if (startPos >= 0) {
-				before = line.charAt(startPos);
-				
-				if (endPos < line.length())
-					after = line.charAt(endPos);
-			}
-			
-			//Increments use counter
-			if (!Character.isLetter(before) && !Character.isLetter(after))
-				field.setUseCount(field.getUseCount() + 1);
 		}
 	}
 

@@ -86,7 +86,7 @@ public class CodeAnalyser extends Application {
 	Label pageNum = new Label("1");
 	Button refresh = new Button("Refresh");
 	Label noSmellsLabel = new Label("No code smells detected");
-	private int page;
+	int page;
 	
 	//Arrays for different views
 	ArrayList<Node> mainScreen = new ArrayList<Node>();
@@ -655,27 +655,37 @@ public class CodeAnalyser extends Application {
 		
 		// to next screen if it finds java files
 		if (reader.getAllFiles().size() > 0) {
-			for (int k = 0; k < reader.getAllFiles().size(); k++)
-				System.out.println(reader.getAllFiles().get(k));
-			
-			reader.readAllFiles();
-			ArrayList<Metrics> files = reader.getAllMetrics();
-			String text = "This project contains " + reader.getAllSmells().size() + " code smell(s).\n\n";
-			text +=  "This project is made up of " + files.size() + " file(s).\n";
-			
-			for (int j = 0; j < files.size(); j++)
-				text += files.get(j).getFileName() + ": " + files.get(j).getTotalLines() + " lines \n";
-			
-			while (selectionScreen.size() >= 7)
-				selectionScreen.remove(selectionScreen.get(selectionScreen.size() - 1));
-			
-			codeOverview.setText(text);
-			selectionScreen.add(graph.generateOverviewChart(reader.getAllMetrics()));
 			saveToRecent(file.getPath());
-			showScreen(1);
+			renderOverview();
 		}
 		else
 			showMessage("No java files found.");
+	}
+	
+	/**
+	 * 
+	 * 
+	 * @param nothing
+	 * @return nothing
+	 */
+	private void renderOverview() {
+		for (int k = 0; k < reader.getAllFiles().size(); k++)
+			System.out.println(reader.getAllFiles().get(k));
+		
+		reader.readAllFiles();
+		ArrayList<Metrics> files = reader.getAllMetrics();
+		String text = "This project contains " + reader.getAllSmells().size() + " code smell(s).\n\n";
+		text +=  "This project is made up of " + files.size() + " file(s).\n";
+		
+		for (int j = 0; j < files.size(); j++)
+			text += files.get(j).getFileName() + ": " + files.get(j).getTotalLines() + " lines \n";
+		
+		while (selectionScreen.size() >= 7)
+			selectionScreen.remove(selectionScreen.get(selectionScreen.size() - 1));
+		
+		codeOverview.setText(text);
+		selectionScreen.add(graph.generateOverviewChart(reader.getAllMetrics()));
+		showScreen(1);
 	}
 	
 	/**
@@ -764,8 +774,9 @@ public class CodeAnalyser extends Application {
 	 * @return nothing
 	 */
 	private void connectGithub(String path) throws IOException {
-		//reader.addFromGithub(path);
-		//showScreen(1);
+		reader.addFromGithub(path);
+		renderOverview();
+		showScreen(1);
 	}
 	
 	/**

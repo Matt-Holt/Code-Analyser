@@ -1,6 +1,5 @@
 package code_smells;
 
-import java.io.File;
 import java.util.Arrays;
 
 import metrics.FieldMetrics;
@@ -37,8 +36,6 @@ public class Bloaters {
 			sReader.createSmell(name, desc, type);
 		}
 		
-		
-		
 		checkFields();
 		checkMethods();
 	}
@@ -74,8 +71,7 @@ public class Bloaters {
 	 * @param nothing
 	 * @return nothing
 	 */
-	private void checkMethods()
-	{
+	private void checkMethods() {
 		for (MethodMetrics m : metrics.getMethods()) {
 			//Checks if methods has too many lines of code
 			if (m.getNumOfLines() >= 30) {

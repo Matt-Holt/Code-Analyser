@@ -30,8 +30,8 @@ public class SmellReader {
 	public void readFile() {
 		new Bloaters(metrics, this);
 		new Dispensables(file, metrics, this);
-		new ChangePreventer(file);
-		new Couplers(file);
+		//ChangePreventer(file, this);
+		new Couplers(file, metrics, this);
 		new ObjectAbusers(file, this);
 	}
 	
