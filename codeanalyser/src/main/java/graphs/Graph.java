@@ -93,16 +93,4 @@ public class Graph {
 		pieChart.setTitle("Current Project");
 		return pieChart;
 	}
-	
-	public
-	static
-	  void  
-	test 
-	(
-		String
-		test
-	)
-	{
-		
-	}
 }
