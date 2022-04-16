@@ -70,23 +70,24 @@ public class CodeAnalyser extends Application {
 
 	//Source Code
 	TextArea code = new TextArea();
-	ArrayList<Node> classButtons = new ArrayList<Node>();
+	int sourcePage;
 	
 	//Metrics
 	TextArea metricsList = new TextArea();
 	Button visualiseButton = new Button("Visualise Metrics");
 	Button methodsButton = new Button("View Methods");
 	Button fieldsButton = new Button("View Fields");
+	int metricsPage;
 	
 	//Smells
 	ArrayList<CodeSmellNode> smellNodes = new ArrayList<CodeSmellNode>();
 	ComboBox<String> smellDropDown = new ComboBox<String>();
-	Button prevPage = new Button("<-");
-	Button nextPage = new Button("->");
+	Button smellPrevPage = new Button("<-");
+	Button smellNextPage = new Button("->");
 	Label pageNum = new Label("1");
 	Button refresh = new Button("Refresh");
 	Label noSmellsLabel = new Label("No code smells detected");
-	int page;
+	int smellPage;
 	
 	//Arrays for different views
 	ArrayList<Node> mainScreen = new ArrayList<Node>();
@@ -113,22 +114,22 @@ public class CodeAnalyser extends Application {
 			}
 		}};	
 	
-	EventHandler<ActionEvent> prevPageEvent = new EventHandler<ActionEvent>() {
+	EventHandler<ActionEvent> prevSmellPageEvent = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
-			if (page > 0)
-				page--;
+			if (smellPage > 0)
+				smellPage--;
 			
-			renderSmell(page);
+			renderSmell(smellPage);
 		}};
 
-		EventHandler<ActionEvent> nextPageEvent = new EventHandler<ActionEvent>() {
+		EventHandler<ActionEvent> nextSmellPageEvent = new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				if (page < (smellNodes.size() / 3))
-					page++;
+				if (smellPage < (smellNodes.size() / 3))
+					smellPage++;
 				
-				renderSmell(page);
+				renderSmell(smellPage);
 			}};
 	
 	EventHandler<ActionEvent> uploadEvent = new EventHandler<ActionEvent>() {
@@ -167,18 +168,24 @@ public class CodeAnalyser extends Application {
 			showScreen(1);
 		}
 	};
+	
 	EventHandler<ActionEvent> viewSourceEvent = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
 			//Changes screen
 			showScreen(2);
+			int n = 0;
 
 			//Creates button for every file read by CodeReader class
-			for (int i = 0; i < reader.getAllFiles().size(); i++) {
+			for (int i = (sourcePage * 17); i < (sourcePage * 17) + 17; i++) {
+				if (i > reader.getAllFiles().size() - 1)
+					break;
+				
+				System.out.println(reader.getAllFiles().size() + ", " + i);
 				File file = reader.getAllFiles().get(i);
 				Button button = new Button(file.getName().replace(".java", ""));
 				button.setLayoutX(25);
-				button.setLayoutY((i * 30) + 85);
+				button.setLayoutY((n * 30) + 85);
 				
 				//Event for display source code
 				EventHandler<ActionEvent> codeEvent = new EventHandler<ActionEvent>() {
@@ -206,7 +213,38 @@ public class CodeAnalyser extends Application {
 
 				button.setOnAction(codeEvent);
 				root.getChildren().add(button);
+				n++;
 			}
+
+			EventHandler<ActionEvent> nextEvent = new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					if (sourcePage < (reader.getAllFiles().size() / 17)) {
+						sourcePage++;
+						viewSourceEvent.handle(null);
+					}
+				}};
+
+			EventHandler<ActionEvent> prevEvent = new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					if (sourcePage > 0) {
+						sourcePage--;
+						viewSourceEvent.handle(null);
+					}
+				}};
+			
+			Button prev = new Button("<-");
+			prev.setLayoutY((17 * 30) + 85);
+			prev.setLayoutX(25);
+			prev.setOnAction(prevEvent);
+			root.getChildren().add(prev);
+			
+			Button next = new Button("->");
+			next.setLayoutY((17 * 30) + 85);
+			next.setLayoutX(230);
+			next.setOnAction(nextEvent);
+			root.getChildren().add(next);
 		}
 	};
 	
@@ -215,13 +253,17 @@ public class CodeAnalyser extends Application {
 		public void handle(ActionEvent event) {
 			//Changes screen
 			showScreen(3);
+			int n = 0;
 			
 			//Creates button for every file read by CodeReader class
-			for (int i = 0; i < reader.getAllMetrics().size(); i++) {
+			for (int i = (metricsPage * 17); i < (metricsPage * 17) + 17; i++) {
+				if (i >= reader.getAllFiles().size() - 1)
+					break;
+				
 				Metrics metric = reader.getAllMetrics().get(i);
 				Button button = new Button(metric.getFileName());
 				button.setLayoutX(25);
-				button.setLayoutY((i * 30) + 85);
+				button.setLayoutY((n * 30) + 85);
 				
 				//Event for display source code
 				EventHandler<ActionEvent> metricsEvent = new EventHandler<ActionEvent>() {
@@ -304,10 +346,42 @@ public class CodeAnalyser extends Application {
 
 				button.setOnAction(metricsEvent);
 				root.getChildren().add(button);
+				n++;
 			}
-		}
-	};
-	EventHandler<ActionEvent> viewSmellsEvent = new EventHandler<ActionEvent>() {
+			
+			EventHandler<ActionEvent> nextEvent = new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					if (metricsPage < (reader.getAllFiles().size() / 17)) {
+						metricsPage++;
+						viewMetricsEvent.handle(null);
+					}
+				}};
+
+			EventHandler<ActionEvent> prevEvent = new EventHandler<ActionEvent>() {
+				@Override
+				public void handle(ActionEvent event) {
+					if (metricsPage > 0) {
+						metricsPage--;
+						viewMetricsEvent.handle(null);
+					}
+				}};
+				
+				Button prev = new Button("<-");
+				prev.setLayoutY((17 * 30) + 85);
+				prev.setLayoutX(25);
+				prev.setOnAction(prevEvent);
+				root.getChildren().add(prev);
+				
+				Button next = new Button("->");
+				next.setLayoutY((17 * 30) + 85);
+				next.setLayoutX(230);
+				next.setOnAction(nextEvent);
+				root.getChildren().add(next);
+			}
+		};
+		
+		EventHandler<ActionEvent> viewSmellsEvent = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent event) {
 			showScreen(4);
@@ -342,8 +416,8 @@ public class CodeAnalyser extends Application {
 				smellNodes.add(new CodeSmellNode(smellName, smellDesc));
 			}
 			
-			page = 0;
-			renderSmell(page);
+			smellPage = 0;
+			renderSmell(smellPage);
 		}
 	};
 	
@@ -513,17 +587,17 @@ public class CodeAnalyser extends Application {
 		refresh.setLayoutY(150);
 		refresh.setOnAction(viewSmellsEvent);
 
-		prevPage.setLayoutX(50);
-		prevPage.setLayoutY(575);
-		prevPage.setScaleX(1.5f);
-		prevPage.setScaleY(1.5f);
-		prevPage.setOnAction(prevPageEvent);
+		smellPrevPage.setLayoutX(50);
+		smellPrevPage.setLayoutY(575);
+		smellPrevPage.setScaleX(1.5f);
+		smellPrevPage.setScaleY(1.5f);
+		smellPrevPage.setOnAction(prevSmellPageEvent);
 		
-		nextPage.setLayoutX(815);
-		nextPage.setLayoutY(575);
-		nextPage.setScaleX(1.5f);
-		nextPage.setScaleY(1.5f);
-		nextPage.setOnAction(nextPageEvent);
+		smellNextPage.setLayoutX(815);
+		smellNextPage.setLayoutY(575);
+		smellNextPage.setScaleX(1.5f);
+		smellNextPage.setScaleY(1.5f);
+		smellNextPage.setOnAction(nextSmellPageEvent);
 
 		pageNum.setScaleX(1.5f);
 		pageNum.setScaleY(1.5f);
@@ -575,8 +649,8 @@ public class CodeAnalyser extends Application {
 		smellsScreen.add(metricsButton);
 		smellsScreen.add(smellsButton);
 		smellsScreen.add(backButton);
-		smellsScreen.add(nextPage);
-		smellsScreen.add(prevPage);
+		smellsScreen.add(smellNextPage);
+		smellsScreen.add(smellPrevPage);
 		smellsScreen.add(pageNum);
 		smellsScreen.add(noSmellsLabel);
 		
@@ -670,12 +744,20 @@ public class CodeAnalyser extends Application {
 	 */
 	private void renderOverview() {
 		reader.readAllFiles();
-		ArrayList<Metrics> files = reader.getAllMetrics();
+		ArrayList<Metrics> metrics = reader.getAllMetrics();
 		String text = "This project contains " + reader.getAllSmells().size() + " code smell(s).\n\n";
-		text +=  "This project is made up of " + files.size() + " file(s).\n";
+		text +=  "This project is made up of " + metrics.size() + " file(s).\n";
+		int totalLines = 0;
+		String list = "";
+
+		for (int i = 0; i < metrics.size(); i++) {
+			Metrics m = metrics.get(i);
+			list += m.getFileName() + ": " + m.getTotalLines() + " lines \n";
+			totalLines += m.getTotalLines();
+		}
 		
-		for (int j = 0; j < files.size(); j++)
-			text += files.get(j).getFileName() + ": " + files.get(j).getTotalLines() + " lines \n";
+		text +=  "Totalling in " + totalLines + " line(s).\n\n";
+		text += list;
 		
 		while (selectionScreen.size() >= 7)
 			selectionScreen.remove(selectionScreen.get(selectionScreen.size() - 1));
@@ -732,6 +814,7 @@ public class CodeAnalyser extends Application {
 			System.out.println(e);
 		}
 	}
+	
 	/**
 	 * Renders all the code smells
 	 * 

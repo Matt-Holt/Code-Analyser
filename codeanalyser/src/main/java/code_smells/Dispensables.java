@@ -38,7 +38,6 @@ public class Dispensables {
 		//Checks for duplicate code
 		checkForDuplicates();
 		
-		
 		//Checks if class is necessary
 		if (metrics.getAllCodeLines().size() <= 10) {
 			String name = "Lazy class";

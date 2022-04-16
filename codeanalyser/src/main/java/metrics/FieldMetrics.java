@@ -18,8 +18,7 @@ public class FieldMetrics {
 	}
 	
 	//@return field name string
-	public String getFieldName()
-	{
+	public String getFieldName() {
 		return fieldName;
 	}
 

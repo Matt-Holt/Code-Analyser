@@ -35,6 +35,9 @@ public class CodeReader {
 	 * @return nothing
 	 */
 	public void addFile(File file) {
+		if (file.getName().equalsIgnoreCase("module-info.java"))
+			return;
+		
 		filesInDirectory.add(file);
 	}
 	
@@ -146,11 +149,7 @@ public class CodeReader {
 	 * @param file
 	 * @return nothing
 	 */
-	private void readFile(File file) {
-		//Ignores module info file since it is not necessary to analyse
-		if (file.getName().equalsIgnoreCase("module-info.java"))
-			return;
-		
+	private void readFile(File file) {		
 		try {
 			Scanner scanner = new Scanner(file);
 			Metrics metrics = new Metrics(file.getName(), file.length());
@@ -184,9 +183,8 @@ public class CodeReader {
 	 * @return nothing
 	 */
 	public void readAllFiles() {
-		for (File file : filesInDirectory) {
+		for (File file : filesInDirectory)
 			readFile(file);
-		}
 	}
 	
 	/**

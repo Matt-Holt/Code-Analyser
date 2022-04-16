@@ -37,8 +37,7 @@ public class Metrics {
 		}
 		
 		String sizeAmount = "";
-		switch(timesDivided)
-		{
+		switch(timesDivided) {
 			case 0:
 				sizeAmount = " Bytes";
 				break;

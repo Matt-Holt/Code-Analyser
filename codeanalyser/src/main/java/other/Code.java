@@ -20,7 +20,7 @@ public class Code {
 			FieldMetrics field = fields.get(i);
 			String fieldName = field.getFieldName();
 			
-			if (containsKeyWord(line, fieldName))
+			if (containsValidWord(line, fieldName))
 				field.setUseCount(field.getUseCount() + 1);
 		}
 	}
@@ -37,13 +37,19 @@ public class Code {
 			String methodName = method.getMethodName();
 			
 			//Returns method if it is used
-			if (containsKeyWord(line, methodName))
+			if (containsValidWord(line, methodName))
 				return method;
 		}
 		return null;
 	}
 	
-	public boolean containsKeyWord(String line, String word) {
+	/**
+	 * Checks to see if the line contains the given word
+	 * 
+	 * @param String line, String word
+	 * @return boolean
+	 */
+	public boolean containsValidWord(String line, String word) {
 		//Returns false if word is not found
 		if (!line.contains(word))
 			return false;
@@ -62,8 +68,10 @@ public class Code {
 		}
 
 		//char before and after word is NOT a letter
-		if (!Character.isLetter(before) && !Character.isLetter(after))
-			return true;
+		if (!Character.isLetter(before) && !Character.isLetter(after)) {
+			if (before != '\'' && before != '\"' && after != '\'' && after != '\"')
+				return true;
+		}
 		
 		return false;
 	}
@@ -123,17 +131,17 @@ public class Code {
 		return false;
 	}	
 	
-	//@return boolean
+	/**@return boolean*/
 	public boolean isOutsideMethod() {
 		return openCurlyBrackets - 1 == closedCurlyBrackets;
 	}
 
-	//@return int open curly brackets
+	/**@return int*/
 	public int getOpenCurlyBrackets() {
 		return openCurlyBrackets;
 	}
 
-	//@return int closed curly brackets
+	/**@return int*/
 	public int getClosedCurlyBrackets() {
 		return closedCurlyBrackets;
 	}

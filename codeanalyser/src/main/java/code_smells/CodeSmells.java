@@ -12,15 +12,18 @@ public class CodeSmells {
 		smellDesc = desc;
 		smellType = type;
 	}
-
+	
+	/**@return string*/
 	public String getSmellName() {
 		return smellName;
 	}
-	
+
+	/**@return string*/
 	public String getSmellDesc() {
 		return smellDesc;
 	}
-	
+
+	/**@return string*/
 	public String getSmellType() {
 		return smellType;
 	}
