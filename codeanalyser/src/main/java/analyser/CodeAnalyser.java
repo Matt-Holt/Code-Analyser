@@ -257,7 +257,7 @@ public class CodeAnalyser extends Application {
 			
 			//Creates button for every file read by CodeReader class
 			for (int i = (metricsPage * 17); i < (metricsPage * 17) + 17; i++) {
-				if (i >= reader.getAllFiles().size() - 1)
+				if (i > reader.getAllFiles().size() - 1)
 					break;
 				
 				Metrics metric = reader.getAllMetrics().get(i);
@@ -402,9 +402,15 @@ public class CodeAnalyser extends Application {
 				smellName.setScaleY(1.5f);
 				
 				TextArea smellDesc = new TextArea(smell.getSmellDesc());
+				Background descBack = null;
+				
+				if (smell.getSmellType() == "Errors")
+					descBack = new Background(new BackgroundFill(Color.RED, CornerRadii.EMPTY, Insets.EMPTY));
+				else
+					descBack = new Background(new BackgroundFill(Color.YELLOW, CornerRadii.EMPTY, Insets.EMPTY));
+				
 				smellDesc.setLayoutX(50);
 				smellDesc.setPrefSize(800, 125);
-				Background descBack = new Background(new BackgroundFill(Color.YELLOW, CornerRadii.EMPTY, Insets.EMPTY));
 				smellDesc.setBackground(descBack);
 				smellDesc.setWrapText(true);
 				smellDesc.setEditable(false);
@@ -563,6 +569,7 @@ public class CodeAnalyser extends Application {
 		//Smells
 		ArrayList<String> typeData = new ArrayList<String>();
 		typeData.add("All");
+		typeData.add("Errors");
 		typeData.add("Bloaters");
 		typeData.add("Object Orient Abusers");
 		typeData.add("Change Preventers");

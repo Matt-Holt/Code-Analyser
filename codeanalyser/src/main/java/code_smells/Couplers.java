@@ -54,7 +54,7 @@ public class Couplers {
 	 * Recursive method that checks if method contains call
 	 * for other method, then checks that one
 	 * 
-	 * @param m
+	 * @param m method metrics
 	 */
 	private void checkMethod(MethodMetrics m) {		
 		for (int i = 0; i < m.getCodeLines().size(); i++) {

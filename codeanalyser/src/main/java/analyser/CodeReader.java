@@ -26,7 +26,7 @@ public class CodeReader {
 	ArrayList<File> filesInDirectory = new ArrayList<File>();
 	ArrayList<Metrics> allMetrics = new ArrayList<Metrics>();
 	ArrayList<CodeSmells> allSmells = new ArrayList<CodeSmells>();
-	ArrayList<Error> allErrors = new ArrayList<Error>();
+	//ArrayList<Error> allErrors = new ArrayList<Error>();
 	
 	/**
 	 * Adds file to the filesInDirectory array
@@ -130,6 +130,7 @@ public class CodeReader {
 			for (int i = 0; i < elements.size(); i++) {
 				Element e = elements.get(i);
 				w.write(e.text() + "\n");
+				System.out.println(e.text());
 			}
 			
 			w.close();
@@ -164,7 +165,7 @@ public class CodeReader {
 
 			//Reads file for all errors
 			ErrorReader errorReader = new ErrorReader(file);
-			allErrors.addAll(errorReader.getErrors());
+			allSmells.addAll(errorReader.getErrors());
 			
 			allMetrics.add(metrics);
 			scanner.close();

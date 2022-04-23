@@ -9,7 +9,7 @@ import other.Code;
 
 public class ErrorReader {
 	private File file;
-	private ArrayList<Error> errors = new ArrayList<Error>();
+	private ArrayList<CodeSmells> errors = new ArrayList<CodeSmells>();
 	
 	public ErrorReader(File file) {
 		this.file = file;
@@ -31,11 +31,22 @@ public class ErrorReader {
 				String line = scanner.nextLine().trim();
 				code.countValidCurlyBrackets(line);
 				}
+			int n = code.getClosedCurlyBrackets() - code.getOpenCurlyBrackets();
 
-			if (code.getClosedCurlyBrackets() != code.getOpenCurlyBrackets()) {
-				String name = "Missing semi-colon";
-				String desc = "";
+			//More open brackets than closed
+			if (n < 0) {
+				String name = "Missing closing bracket";
+				String desc = "The class '"+ file.getName() + "' is missing a closing curcly bracket. "
+						+ "This ruins the structure of the code and the code cannot compile with this error.";
 				createError(name, desc);	
+			}
+			//More closed brackets than open
+			else if (n > 0) {
+				String name = "Extra closing bracket";
+				String desc = "The class '"+ file.getName() + "' has a closing curcly bracket that does not have a "
+						+ "matching open curly bracket. This ruins the structure of the code and the code cannot "
+						+ "compile with this error.";
+				createError(name, desc);
 			}
 			scanner.close();
 		}
@@ -51,12 +62,12 @@ public class ErrorReader {
 	 * @return nothing
 	 */
 	private void createError(String name, String desc) {
-		Error error = new Error(name, desc);
+		CodeSmells error = new CodeSmells(name, desc, "Errors");
 		errors.add(error);
 	}
 	
 	//@return list of errors
-	public ArrayList<Error> getErrors() {
+	public ArrayList<CodeSmells> getErrors() {
 		return errors;
 	}
 }
