@@ -15,6 +15,24 @@ import metrics.MethodMetrics;
 import metrics.Metrics;
 
 public class Graph {
+	
+	/**
+	 * trims string if it exceeds certain amount of characters
+	 * 
+	 * @param name
+	 * @return string
+	 */
+	private String trimName(String name) {
+		int maxLength = 15;
+		String trim = name;
+		
+		if (name.length() >= maxLength) {
+			trim = name.substring(0, maxLength - 3);
+			trim = trim + "...";
+		}
+		
+		return trim;
+	}
 
 	/**
 	 * Generates a bar chart from method data
@@ -26,7 +44,7 @@ public class Graph {
 		ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 		
 		for (MethodMetrics m : metrics.getMethods()) {
-			String name = m.getMethodName();
+			String name = trimName(m.getMethodName());
 			int val = m.getNumOfLines();
 			String data = name + ": " + val;
 			pieChartData.add(new PieChart.Data(data, val));
@@ -53,7 +71,7 @@ public class Graph {
         BarChart<String,Number> barChart = new BarChart<String,Number>(xAxis,yAxis);
         
         for (FieldMetrics f : metrics.getFields()) {
-        	String name = f.getFieldName();
+        	String name = trimName(f.getFieldName());
 			int val = f.getUseCount();
 			String data = name + ": " + val;
 			XYChart.Series<String, Number> series = new XYChart.Series<>(); 
@@ -79,7 +97,7 @@ public class Graph {
 		ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
 		
 		for (Metrics m : metrics) {
-			String name = m.getFileName();
+			String name = trimName(m.getFileName());
 			int val = m.getTotalLines();
 			String data = name + ": " + val;
 			pieChartData.add(new PieChart.Data(data, val));
