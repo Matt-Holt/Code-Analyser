@@ -174,60 +174,46 @@ public class Metrics {
 		}
 		return "";
 	}
-
-	/**
-	 * @return className
-	 */
+	
+	/**Sets type of file */
+	public void setType(String type) {
+		this.type = type;
+	}
+	
+	/** @return className */
 	public String getFileName() {
 		return fileName;
 	}
-	/**
-	 * @return type
-	 */
+	/** @return type */
 	public String getType() {
 		return type;
 	}
-	/**
-	 * @return size
-	 */
+	/** @return size */
 	public String getSize() {
 		return fileSize;
 	}
-	/**
-	 * @return total lines
-	 */
+	/** @return total lines */
 	public int getTotalLines() {
 		return totalLines;
 	}
-	/**
-	 * @return total comments
-	 */
+	/** @return total comments */
 	public int getCommentLines() {
 		return commentLines;
 	}
-	/**
-	 * @return array of variables
-	 */
+	/** @return array of variables */
 	public ArrayList<FieldMetrics> getFields() {
 		return fields;
 	}
-	/**
-	 * @return array of methods
-	 */
+	/** @return array of methods */
 	public ArrayList<MethodMetrics> getMethods() {
 		return methods;
 	}
-	/**
-	 * @param nothing
-	 * @return list of all lines
-	 */
+	/** @return list of all lines */
 	public ArrayList<String> getAllCodeLines() {
 		return allCodeLines;
 	}
 	
-	/**
-	 * @return average method complexity
-	 */
+	/** @return average method complexity */
 	public String getAverageMethodComplexity() {
 		return averageMethodComplexity;
 	}	

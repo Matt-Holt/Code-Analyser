@@ -269,13 +269,20 @@ public class CodeAnalyser extends Application {
 				EventHandler<ActionEvent> metricsEvent = new EventHandler<ActionEvent>() {
 					@Override
 					public void handle(ActionEvent event) {
-						String text = "Name:						" + metric.getFileName() + "\n";
-						text += "Size:							" + metric.getSize() + "\n";
-						text += "Type:						" + metric.getType() + "\n";
-						text += "Total Lines:					" + metric.getTotalLines() + "\n";
-						text += "Total Comment Lines:			" + metric.getCommentLines() + "\n";
-						text += "Total Methods:				" + metric.getMethods().size() + "\n";
-						text += "Total Fields:					" + metric.getFields().size() + "\n";
+						
+						String text= "";
+						if (metric.getType() != "aborted") {
+							text += "Name:						" + metric.getFileName() + "\n";
+							text += "Size:							" + metric.getSize() + "\n";
+							text += "Type:						" + metric.getType() + "\n";
+							text += "Total Lines:					" + metric.getTotalLines() + "\n";
+							text += "Total Comment Lines:			" + metric.getCommentLines() + "\n";
+							text += "Total Methods:				" + metric.getMethods().size() + "\n";
+							text += "Total Fields:					" + metric.getFields().size() + "\n";
+						}
+						else
+							text = "Cannot display metrics due to syntax error in this file.";
+						
 						metricsList.setText(text);
 
 						//Event for viewing graphs

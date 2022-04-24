@@ -154,18 +154,23 @@ public class CodeReader {
 		try {
 			Scanner scanner = new Scanner(file);
 			Metrics metrics = new Metrics(file.getName(), file.length());
-			
-			//Sends each line to the metrics and smells class to be read
-			while (scanner.hasNextLine())
-				metrics.readLine(scanner.nextLine());
-
-			//Reads file for all smells
-			SmellReader smellReader = new SmellReader(metrics, file, allMetrics);
-			allSmells.addAll(smellReader.getSmells());
 
 			//Reads file for all errors
 			ErrorReader errorReader = new ErrorReader(file);
 			allSmells.addAll(errorReader.getErrors());
+			
+			if (errorReader.getErrors().size() > 0) {
+				metrics.setType("aborted");
+			}
+			else {
+				//Sends each line to the metrics and smells class to be read
+				while (scanner.hasNextLine())
+					metrics.readLine(scanner.nextLine());
+			}
+
+			//Reads file for all smells
+			SmellReader smellReader = new SmellReader(metrics, file, allMetrics);
+			allSmells.addAll(smellReader.getSmells());
 			
 			allMetrics.add(metrics);
 			scanner.close();
