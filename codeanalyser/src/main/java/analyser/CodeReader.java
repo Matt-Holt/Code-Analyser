@@ -15,7 +15,6 @@ import org.jsoup.select.Elements;
 
 import code_smells.*;
 import errors.ErrorReader;
-import errors.Error;
 import metrics.Metrics;
 
 /*
@@ -63,8 +62,7 @@ public class CodeReader {
 					ext = fileName.substring(i + 1);
 				
 				//if Java file, add to list
-				if (ext.equalsIgnoreCase("java"))
-				{
+				if (ext.equalsIgnoreCase("java")) {
 					File newFile = new File(path + "\\" + fileName);
 					addFile(newFile);
 				}
@@ -84,12 +82,14 @@ public class CodeReader {
 	 * @param path
 	 * @return nothing
 	 * */
-	public void addFromGithub(String path) throws IOException {
-		final Document doc = Jsoup.connect("https://github.com/" + path).get();
+	public void addFromGithub(String url) throws IOException {
+		System.out.println("Test: " + url);
+		final Document doc = Jsoup.connect(url).get();
+		
 		Elements elements = doc.getElementsByClass("js-details-container Details");
 		elements = elements.select("a");
 		elements.select("js-navigation-open Link--primary");
-		    
+		
 		for (int i = 0; i < elements.size(); i++) {
 		 Element e = elements.get(i);
 			    
@@ -97,6 +97,7 @@ public class CodeReader {
 			 continue;
 			    
 			String href = e.attr("href");
+			//System.out.println(href);
 			int j = e.text().lastIndexOf(".");
 			String ext = "directory";
 				
@@ -108,7 +109,7 @@ public class CodeReader {
 				createFileFromHref(href, e.text());
 			}
 			else if (ext.equalsIgnoreCase("directory")) {
-				addFromGithub(href);
+				addFromGithub("https://www.github.com" + href);
 			}
 		}
 	}
@@ -125,12 +126,11 @@ public class CodeReader {
 			PrintWriter w = new PrintWriter(file);
 			final Document doc = Jsoup.connect("https://github.com/" + href).get();
 			Elements elements = doc.getElementsByClass("highlight tab-size js-file-line-container js-code-nav-container js-tagsearch-file");
-			elements = elements.select("td");
+			elements = elements.select("tr");
 			
 			for (int i = 0; i < elements.size(); i++) {
 				Element e = elements.get(i);
 				w.write(e.text() + "\n");
-				System.out.println(e.text());
 			}
 			
 			w.close();
@@ -159,14 +159,12 @@ public class CodeReader {
 			ErrorReader errorReader = new ErrorReader(file);
 			allSmells.addAll(errorReader.getErrors());
 			
-			if (errorReader.getErrors().size() > 0) {
+			if (errorReader.getErrors().size() > 0)
 				metrics.setType("aborted");
-			}
-			else {
-				//Sends each line to the metrics and smells class to be read
-				while (scanner.hasNextLine())
-					metrics.readLine(scanner.nextLine());
-			}
+			
+			//Sends each line to the metrics and smells class to be read
+			while (scanner.hasNextLine())
+				metrics.readLine(scanner.nextLine());
 
 			//Reads file for all smells
 			SmellReader smellReader = new SmellReader(metrics, file, allMetrics);
@@ -200,16 +198,16 @@ public class CodeReader {
 	 * @return nothing
 	 */
 	public void printFileNames() {
+		System.out.println("Sorry");
 		if (filesInDirectory.size() >= 0) {
 			System.out.println("This directory contains the following java files:");
 			
 			for (int i = 0; i < filesInDirectory.size(); i++)
 				System.out.println(i + 1 + ". " + filesInDirectory.get(i).getName());	
 		}
-		else {
+		else
 			System.out.println("There are no java files here...");
 		}
-	}
 	
 	/**
 	 * Clears all uploaded files, metrics and smells

@@ -57,9 +57,7 @@ public class ObjectAbusers {
 					inStatement = true;
 				}
 				
-				if (inStatement) {
-					System.out.println(line);
-					
+				if (inStatement) {					
 					if (code.containsValidWord(line, "case") || code.containsValidWord(line, "default"))
 						numOfCases++;
 

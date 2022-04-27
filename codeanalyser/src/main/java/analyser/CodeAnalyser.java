@@ -55,8 +55,9 @@ public class CodeAnalyser extends Application {
 	Button uploadButton = new Button("Upload new file/project");
 	Button uploadRecentButton = new Button("Open most recent");
 	Button githubConnect = new Button("Connect");
-	TextArea githubBox = new TextArea();
-	Label gitHubLabel = new Label("https://www.github.com/");
+	TextArea githubUserBox = new TextArea();
+	TextArea githubRepoBox = new TextArea();
+	Label gitHubLabel = new Label("GitHub:");
 	Button quitButton = new Button("Quit");
 
 	//Selection Screen
@@ -106,13 +107,13 @@ public class CodeAnalyser extends Application {
 		@Override
 		public void handle(ActionEvent event) {
 			try {
-				connectGithub(githubBox.getText());
+				connectGithub();
 			} 
 			catch (IOException e) {
 				showMessage("Cannot retrieve github repository.");
 				System.out.println(e);
 			}
-		}};	
+		}};
 	
 	EventHandler<ActionEvent> prevSmellPageEvent = new EventHandler<ActionEvent>() {
 		@Override
@@ -181,7 +182,6 @@ public class CodeAnalyser extends Application {
 				if (i > reader.getAllFiles().size() - 1)
 					break;
 				
-				System.out.println(reader.getAllFiles().size() + ", " + i);
 				File file = reader.getAllFiles().get(i);
 				Button button = new Button(file.getName().replace(".java", ""));
 				button.setLayoutX(25);
@@ -478,16 +478,24 @@ public class CodeAnalyser extends Application {
 		gitHubLabel.setLayoutY(335);
 		gitHubLabel.setScaleX(2.5);
 		gitHubLabel.setScaleY(2.5);
-		
-		githubBox.setPromptText("user-name/repository.git");
-		githubBox.setLayoutX(385);
-		githubBox.setLayoutY(320);
-		githubBox.setPrefSize(canvas.getWidth() - 800, 40);
-		Font githubFont = githubBox.getFont();
-		float gitFSize = (float)githubFont.getSize() + 10.0f;
-		githubBox.setFont(Font.font(gitFSize));
 
-		githubConnect.setLayoutX(900);
+		githubUserBox.setPromptText("username");
+		githubUserBox.setLayoutX(235);
+		githubUserBox.setLayoutY(320);
+		githubUserBox.setPrefSize(canvas.getWidth() - 1000, 40);
+		Font githubUFont = githubUserBox.getFont();
+		float gitUFSize = (float)githubUFont.getSize() + 10.0f;
+		githubUserBox.setFont(Font.font(gitUFSize));
+
+		githubRepoBox.setPromptText("repository");
+		githubRepoBox.setLayoutX(535);
+		githubRepoBox.setLayoutY(320);
+		githubRepoBox.setPrefSize(canvas.getWidth() - 1000, 40);
+		Font githubRFont = githubRepoBox.getFont();
+		float gitRFSize = (float)githubRFont.getSize() + 10.0f;
+		githubRepoBox.setFont(Font.font(gitRFSize));
+
+		githubConnect.setLayoutX(850);
 		githubConnect.setLayoutY(340);
 		githubConnect.setScaleX(1.5);
 		githubConnect.setScaleY(1.5);
@@ -624,7 +632,8 @@ public class CodeAnalyser extends Application {
 		mainScreen.add(tipLabel);
 		mainScreen.add(descLabel);
 		mainScreen.add(uploadButton);
-		mainScreen.add(githubBox);
+		mainScreen.add(githubUserBox);
+		mainScreen.add(githubRepoBox);
 		mainScreen.add(gitHubLabel);
 		mainScreen.add(githubConnect);
 		mainScreen.add(uploadRecentButton);
@@ -867,8 +876,11 @@ public class CodeAnalyser extends Application {
 	 * @param nothing
 	 * @return nothing
 	 */
-	private void connectGithub(String path) throws IOException {
-		reader.addFromGithub(path);
+	private void connectGithub() throws IOException {
+		String user = githubUserBox.getText();
+		String repo = githubRepoBox.getText();
+		String url = "https://www.github.com/" + user + "/" + repo + "/";
+		reader.addFromGithub(url);
 		renderOverview();
 		showScreen(1);
 	}

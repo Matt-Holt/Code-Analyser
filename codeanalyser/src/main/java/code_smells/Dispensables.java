@@ -82,21 +82,24 @@ public class Dispensables {
 		ArrayList<String> lines = metrics.getAllCodeLines();
 		lines.sort(null);
 		boolean isDuplicate = false;
+		String duplicateCode = "";
 		
 		for (int i = 1; i < lines.size(); i++) {
 			String current = lines.get(i);
 			String previous = lines.get(i - 1);
 			
 			if (code.isValidStatement(previous) && code.isValidStatement(current)) {
-				if (current.equalsIgnoreCase(previous) && (current.split(".").length > 1 || current.split(" ").length > 1))
+				if (current.equalsIgnoreCase(previous) && (current.split(".").length > 1 || current.split(" ").length > 1)) { 
+					duplicateCode = current;
 					isDuplicate = true;
+				}
 			}
 		}
 		
 		if (isDuplicate) {
 			String name = "Duplicate code";
-			String desc = "The class '" + metrics.getFileName() + "' contains duplicate code. " +
-			"It would be more efficient if there was extracted into a method.";
+			String desc = "The class '" + metrics.getFileName() + "' contains the duplicate code \"" +
+			 duplicateCode + "\". It would be more efficient if there was extracted into a method.";
 			sReader.createSmell(name, desc, type);
 		}
 	}

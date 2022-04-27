@@ -76,6 +76,10 @@ public class Metrics {
 			return;
 		}
 		
+		//Stops reading rest of file
+		if (type == "aborted")
+			return;
+		
 		if (methodStartLine >= 0)
 			currentMethod.addCodeLine(t);
 		
