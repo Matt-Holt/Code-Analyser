@@ -183,7 +183,13 @@ public class CodeAnalyser extends Application {
 					break;
 				
 				File file = reader.getAllFiles().get(i);
-				Button button = new Button(file.getName().replace(".java", ""));
+				String name = file.getName().replace(".java", "");
+				if (name.length() >= 35) {
+					name = name.substring(0, 32);
+					name += "...";
+				}
+				
+				Button button = new Button(name);
 				button.setLayoutX(25);
 				button.setLayoutY((n * 30) + 85);
 				
@@ -261,7 +267,13 @@ public class CodeAnalyser extends Application {
 					break;
 				
 				Metrics metric = reader.getAllMetrics().get(i);
-				Button button = new Button(metric.getFileName());
+				String name = metric.getFileName();
+				if (name.length() >= 35) {
+					name = name.substring(0, 32);
+					name += "...";
+				}
+				
+				Button button = new Button(name);
 				button.setLayoutX(25);
 				button.setLayoutY((n * 30) + 85);
 				
@@ -768,7 +780,7 @@ public class CodeAnalyser extends Application {
 	private void renderOverview() {
 		reader.readAllFiles();
 		ArrayList<Metrics> metrics = reader.getAllMetrics();
-		String text = "This project contains " + reader.getAllSmells().size() + " code smell(s).\n\n";
+		String text = "This project contains " + reader.getAllSmells().size() + " code violation(s).\n\n";
 		text +=  "This project is made up of " + metrics.size() + " file(s).\n";
 		int totalLines = 0;
 		String list = "";

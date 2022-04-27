@@ -136,11 +136,11 @@ public class Metrics {
 			if (inMethod && code.isOutsideMethod())
 				methodStartLine = totalLines + 1;
 
-			code.countValidCurlyBrackets(t);
+			code.countValidBrackets(t);
 		}
 		
 		if (code.containsValidChar(t, '}')) {
-			code.countValidCurlyBrackets(t);
+			code.countValidBrackets(t);
 			
 			/**
 			 * Checks if current line is outside of method if it is

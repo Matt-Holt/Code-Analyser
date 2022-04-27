@@ -7,6 +7,10 @@ import metrics.MethodMetrics;
 
 public class Code {
 
+	private int openBrackets = 0;
+	private int closedBrackets = 0;
+	private int openSquareBrackets = 0;
+	private int closedSquareBrackets = 0;
 	private int openCurlyBrackets = 0;
 	private int closedCurlyBrackets = 0;
 	
@@ -82,18 +86,28 @@ public class Code {
 	 * @param line
 	 * @return nothing
 	 */
-	public void countValidCurlyBrackets(String line) {
+	public void countValidBrackets(String line) {
 		boolean valid = true;
 		for (int i = 0; i < line.length(); i++) {
 			char ch = line.charAt(i);
 			if (ch == '\"' || ch == '\'')
 				valid = !valid;
-
-			if (ch == '{' && valid)
-				openCurlyBrackets++;
 			
-			if (ch == '}' && valid)
-				closedCurlyBrackets++;
+			if (valid) {
+				if (ch == '{')
+					openCurlyBrackets++;
+				if (ch == '(')
+					openBrackets++;
+				if (ch == '[')
+					openSquareBrackets++;
+
+				if (ch == '}')
+					closedCurlyBrackets++;
+				if (ch == ')')
+					closedBrackets++;
+				if (ch == ']')
+					closedSquareBrackets++;
+			}
 		}
 	}
 	
@@ -131,6 +145,7 @@ public class Code {
 		return false;
 	}	
 	
+	
 	/**@return boolean*/
 	public boolean isOutsideMethod() {
 		return openCurlyBrackets - 1 == closedCurlyBrackets;
@@ -144,5 +159,25 @@ public class Code {
 	/**@return int*/
 	public int getClosedCurlyBrackets() {
 		return closedCurlyBrackets;
+	}
+	
+	/**@return int*/
+	public int getOpenBrackets() {
+		return openBrackets;
+	}
+
+	/**@return int*/
+	public int getClosedBrackets() {
+		return closedBrackets;
+	}
+
+	/**@return int*/
+	public int getOpenSquareBrackets() {
+		return openSquareBrackets;
+	}
+
+	/**@return int*/
+	public int getClosedSquareBrackets() {
+		return closedSquareBrackets;
 	}
 }
